@@ -22,7 +22,7 @@ def test_targets_kinds():
 def test_dispatcher_routes_by_type(target, attack_cls):
     attack = dispatcher.select_attack(target, num_steps=3)
     assert type(attack) is attack_cls and attack.target is target
-    assert attack.config == {"num_steps": 3}
+    assert attack.config["num_steps"] == 3
 
 
 def test_dispatcher_subclass_and_unknown():

@@ -1,5 +1,6 @@
 from .loader import ModelConfig, ModelBundle, load_model, get_decoder_layers
 from .prompting import PromptParts, split_prompt
+from .embedder import load_embedder
 
 __all__ = ["ModelConfig", "ModelBundle", "load_model", "get_decoder_layers",
-           "PromptParts", "split_prompt"]
+           "PromptParts", "split_prompt", "load_embedder"]
