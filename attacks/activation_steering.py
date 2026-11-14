@@ -36,7 +36,10 @@ DEFAULTS = dict(
     test_prompts=("Thanks for the update about the meeting.",),
     max_new_tokens=30,
     skip_first_token=True,
-    repetition_penalty=1.3,   # same for every alpha; stops distilgpt2 greedy loops
+    # same for every alpha. None = auto: 1.3 for raw-text/base models (stops
+    # distilgpt2 greedy loops), 1.0 in chat mode (1.3 distorts instruct baselines,
+    # observed on Qwen2.5-0.5B-Instruct: it penalises tokens of the system/user turn)
+    repetition_penalty=None,
     chat_template="auto",     # True/False/"auto" (= model ships a real chat template)
 )
 
@@ -104,6 +107,9 @@ class ActivationSteeringAttack(Attack):
         chat = c["chat_template"]
         if chat == "auto":
             chat = has_real_chat_template(bundle.tokenizer)
+        rp = c["repetition_penalty"]
+        if rp is None:
+            rp = 1.0 if chat else 1.3
         direction, pos_mean, neg_mean = contrastive_direction(bundle, self.target,
                                                               c["skip_first_token"], chat)
 
@@ -112,12 +118,12 @@ class ActivationSteeringAttack(Attack):
             generations[alpha] = {}
             with steer(bundle, self.target.layer, alpha * direction):
                 for p in c["test_prompts"]:
-                    generations[alpha][p] = generate(bundle, p, c["max_new_tokens"], c["repetition_penalty"], chat)
+                    generations[alpha][p] = generate(bundle, p, c["max_new_tokens"], rp, chat)
 
         return AttackResult(
             target=self.target, attack=type(self).__name__, payload=direction.cpu(),
             final_loss=None,
-            extra={"generations": generations, "chat_template": chat,
+            extra={"generations": generations, "chat_template": chat, "repetition_penalty": rp,
                    "direction_norm": direction.norm().item(),
                    "pos_mean_norm": pos_mean.norm().item(),
                    "neg_mean_norm": neg_mean.norm().item(),
