@@ -35,3 +35,15 @@ projection scale: formal prompts 4.90, informal prompts -15.99
     -> ' Government and Public, further Parliamentary Committee of Special Information ( " Additional Consult or Pro Form A D\n The Department General Advisory Commission on App M P Sub'
 
 saved runs/phase4_steering.json
+
+=== FINDING: non-monotonic steering optimum ("more is not better") ===
+Output projection on the formal direction (layer 3, distilgpt2, mean of 3 prompts,
+outputs re-read by the unsteered model):
+  alpha 0: -4.14   alpha 2: 7.16   alpha 4: 3.57   alpha 8: 0.91
+  reference: purely formal prompts 4.90, informal prompts -15.99
+The projection peaks at alpha=2, ABOVE the level of the formal reference prompts
+themselves, then FALLS at alpha=4 and alpha=8: the text degenerates into lists of
+formal keywords ("Government Public Information ... Committee Parliamentary") and
+stops reading as belonging to the target category. Injection strength has an
+interior optimum; maximising alpha is counter-productive. The optimum must be
+searched per model/layer (alpha is in units of the raw mean-difference vector).
