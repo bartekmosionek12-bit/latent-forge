@@ -49,16 +49,27 @@ INFORMAL = [
 ]
 STEER_PROMPTS = ["Regarding the schedule for next week,", "I wanted to tell you about the trip.",
                  "About the new coffee machine in the kitchen:"]
+# same topics as user turns, for instruct models with a chat template
+STEER_PROMPTS_CHAT = ["Write two sentences about the schedule for next week.",
+                      "Tell me briefly about a trip you took.",
+                      "Write a short note about the new coffee machine in the kitchen."]
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--model", default="distilgpt2")
 ap.add_argument("--dtype", default="float32")
 ap.add_argument("--gcg-steps", type=int, default=250)
 ap.add_argument("--steer-layer", type=int, default=3)
+ap.add_argument("--alphas", default="0,2,4,8")
+ap.add_argument("--steer-max-new-tokens", type=int, default=30)
 ap.add_argument("--out", default="runs/e2e_all_paths.json")
 a = ap.parse_args()
 
 bundle = load_model(ModelConfig(name=a.model, dtype=a.dtype))
+from evaluation.activation import has_real_chat_template  # noqa: E402
+
+CHAT = has_real_chat_template(bundle.tokenizer)  # checked BEFORE nanogcg may install its fallback
+steer_prompts = STEER_PROMPTS_CHAT if CHAT else STEER_PROMPTS
+print(f"model {a.model} ({a.dtype}), real chat template: {CHAT}")
 
 # goal -> attack-specific knobs. The dispatcher picks the attack; these are only
 # its hyper-parameters (each attack validates its own option names).
@@ -68,7 +79,8 @@ jobs = [
     (EmbeddingRegionTarget(SOURDOUGH, embedder_name="sentence-transformers/all-MiniLM-L6-v2"),
      dict(payload=PAYLOAD, n_tokens=16, init="centroid_text", num_steps=200, seed=0)),
     (ActivationDirectionTarget(FORMAL, INFORMAL, layer=a.steer_layer),
-     dict(alphas=[0.0, 2.0, 4.0, 8.0], test_prompts=STEER_PROMPTS, max_new_tokens=30)),
+     dict(alphas=[float(x) for x in a.alphas.split(",")], test_prompts=steer_prompts,
+          max_new_tokens=a.steer_max_new_tokens, chat_template=CHAT)),
 ]
 
 summary = {"model": a.model, "paths": []}
@@ -100,12 +112,16 @@ for target, cfg in jobs:
 
     elif isinstance(target, ActivationDirectionTarget):
         ref = report["reference"]
-        print(f"  |direction| {result.extra['direction_norm']:.2f}; projection scale: formal "
+        print(f"  chat template: {result.extra['chat_template']}; "
+              f"|direction| {result.extra['direction_norm']:.2f}; projection scale: formal "
               f"{ref['positive_prompts_mean_proj']:.2f}, informal {ref['negative_prompts_mean_proj']:.2f}")
         for alpha, r in report["by_alpha"].items():
-            g = r["generations"][STEER_PROMPTS[0]]
+            g = r["generations"][steer_prompts[0]]
             print(f"  alpha {alpha:+.0f}: projection {r['mean_projection_of_output']:6.2f}  "
-                  f"{STEER_PROMPTS[0]!r} -> {g[:90]!r}")
+                  f"{steer_prompts[0]!r} -> {g[:90]!r}")
+        for alpha, r in report["by_alpha"].items():
+            for p, g in r["generations"].items():
+                print(f"    [alpha {alpha:+.0f}] {p!r}\n        -> {g!r}")
         entry.update(evaluation={**report, "by_alpha": {str(k): v for k, v in report["by_alpha"].items()}})
 
     summary["paths"].append(entry)

@@ -29,18 +29,22 @@ def evaluate_result(result, bundle) -> dict:
         from .activation import activation_projection
 
         d, L = result.payload, t.layer
+        chat = result.extra.get("chat_template", False)
         report = {
             "reference": {
-                "positive_prompts_mean_proj": _mean(activation_projection(bundle, p, d, L)
+                "positive_prompts_mean_proj": _mean(activation_projection(bundle, p, d, L, chat=chat)
                                                     for p in t.positive_prompts),
-                "negative_prompts_mean_proj": _mean(activation_projection(bundle, p, d, L)
+                "negative_prompts_mean_proj": _mean(activation_projection(bundle, p, d, L, chat=chat)
                                                     for p in t.negative_prompts),
             },
+            "chat_template": chat,
             "by_alpha": {},
         }
         # generated continuations are re-read by the UNSTEERED model and projected
+        # (chat mode: as the assistant reply to the prompt that produced them)
         for alpha, gens in result.extra["generations"].items():
-            projs = [activation_projection(bundle, g, d, L) for g in gens.values() if g.strip()]
+            projs = [activation_projection(bundle, g, d, L, chat=chat, user=p)
+                     for p, g in gens.items() if g.strip()]
             report["by_alpha"][alpha] = {"mean_projection_of_output": _mean(projs),
                                          "generations": gens}
         return report

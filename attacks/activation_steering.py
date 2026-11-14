@@ -8,6 +8,11 @@ and token position 0 is excluded (GPT-2 attention-sink activation).
 Injection: block-L output h -> h + alpha * direction at every position, every
 forward pass of generate(). ``alpha`` is the strength knob (alpha=0 = no steering).
 
+Chat models (chat_template=True, or "auto" when the tokenizer ships a real
+template): contrastive texts are rendered as the ASSISTANT reply in the chat
+template and only their own tokens are averaged; test prompts are user turns and
+generation starts the assistant turn. Base models keep the raw-text behaviour.
+
 Hook semantics verified on transformers 4.47.1 / torch 2.15: GPT2Block returns a
 tuple (hidden_states, present, ...); returning a modified tuple from
 register_forward_hook replaces the block output; removing the handle restores
@@ -20,7 +25,7 @@ from contextlib import contextmanager
 
 import torch
 
-from evaluation.activation import residual_activations
+from evaluation.activation import content_activations, has_real_chat_template
 from models import get_decoder_layers
 from targets import ActivationDirectionTarget
 
@@ -32,6 +37,7 @@ DEFAULTS = dict(
     max_new_tokens=30,
     skip_first_token=True,
     repetition_penalty=1.3,   # same for every alpha; stops distilgpt2 greedy loops
+    chat_template="auto",     # True/False/"auto" (= model ships a real chat template)
 )
 
 
@@ -52,12 +58,13 @@ def steer(bundle, layer: int, vector: torch.Tensor):
         handle.remove()
 
 
-def contrastive_direction(bundle, target: ActivationDirectionTarget, skip_first: bool = True):
+def contrastive_direction(bundle, target: ActivationDirectionTarget, skip_first: bool = True,
+                          chat: bool = False):
+    """chat=True: each contrastive text is rendered as the assistant reply in the
+    model's chat template and only its own tokens are averaged."""
     def mean_act(prompts):
-        acts = []
-        for p in prompts:
-            h = residual_activations(bundle, p, target.layer)
-            acts.append((h[1:] if skip_first and h.shape[0] > 1 else h).mean(0))
+        acts = [content_activations(bundle, p, target.layer, chat=chat, skip_first=skip_first).mean(0)
+                for p in prompts]
         return torch.stack(acts).mean(0)
 
     pos, neg = mean_act(target.positive_prompts), mean_act(target.negative_prompts)
@@ -65,9 +72,15 @@ def contrastive_direction(bundle, target: ActivationDirectionTarget, skip_first:
 
 
 @torch.no_grad()
-def generate(bundle, prompt: str, max_new_tokens: int, repetition_penalty: float = 1.0) -> str:
+def generate(bundle, prompt: str, max_new_tokens: int, repetition_penalty: float = 1.0,
+             chat: bool = False) -> str:
+    """chat=True: ``prompt`` is the user turn, generation starts the assistant turn."""
     tok = bundle.tokenizer
-    ids = tok(prompt, return_tensors="pt")["input_ids"].to(bundle.device)
+    if chat:
+        ids = tok.apply_chat_template([{"role": "user", "content": prompt}],
+                                      add_generation_prompt=True, return_tensors="pt").to(bundle.device)
+    else:
+        ids = tok(prompt, return_tensors="pt")["input_ids"].to(bundle.device)
     out = bundle.model.generate(ids, attention_mask=torch.ones_like(ids), do_sample=False,
                                 max_new_tokens=max_new_tokens, pad_token_id=tok.pad_token_id,
                                 repetition_penalty=repetition_penalty)
@@ -88,19 +101,23 @@ class ActivationSteeringAttack(Attack):
         n_layers = len(get_decoder_layers(bundle.model))
         if not 0 <= self.target.layer < n_layers:
             raise ValueError(f"layer {self.target.layer} out of range (model has {n_layers})")
-        direction, pos_mean, neg_mean = contrastive_direction(bundle, self.target, c["skip_first_token"])
+        chat = c["chat_template"]
+        if chat == "auto":
+            chat = has_real_chat_template(bundle.tokenizer)
+        direction, pos_mean, neg_mean = contrastive_direction(bundle, self.target,
+                                                              c["skip_first_token"], chat)
 
         generations: dict[float, dict[str, str]] = {}
         for alpha in c["alphas"]:
             generations[alpha] = {}
             with steer(bundle, self.target.layer, alpha * direction):
                 for p in c["test_prompts"]:
-                    generations[alpha][p] = generate(bundle, p, c["max_new_tokens"], c["repetition_penalty"])
+                    generations[alpha][p] = generate(bundle, p, c["max_new_tokens"], c["repetition_penalty"], chat)
 
         return AttackResult(
             target=self.target, attack=type(self).__name__, payload=direction.cpu(),
             final_loss=None,
-            extra={"generations": generations,
+            extra={"generations": generations, "chat_template": chat,
                    "direction_norm": direction.norm().item(),
                    "pos_mean_norm": pos_mean.norm().item(),
                    "neg_mean_norm": neg_mean.norm().item(),
