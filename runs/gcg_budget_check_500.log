@@ -1,0 +1,59 @@
+model Qwen/Qwen2.5-0.5B-Instruct, target 'TEST_odpowiedz_testowa', prompt 'Reply with a short answer:', steps 500
+config: {'num_steps': 500, 'optim_str_init': 'x x x x x x x x x x x x x x x x x x x x', 'search_width': 256, 'batch_size': None, 'topk': 128, 'n_replace': 1, 'buffer_size': 0, 'use_mellowmax': False, 'mellowmax_alpha': 1.0, 'early_stop': False, 'use_prefix_cache': True, 'allow_non_ascii': False, 'filter_ids': True, 'add_space_before_target': False, 'seed': 0, 'verbosity': 'INFO'}
+
+loss curve (per-step best candidate loss | running min)
+  step    1  loss 7.9725  running-min 7.9725
+  step   25  loss 3.5356  running-min 3.5356
+  step   50  loss 2.5403  running-min 2.2894
+  step   75  loss 2.5360  running-min 2.1672
+  step  100  loss 2.1273  running-min 2.1273
+  step  125  loss 1.8744  running-min 1.8744
+  step  150  loss 1.7480  running-min 1.5233
+  step  175  loss 1.5745  running-min 1.4017
+  step  200  loss 1.5552  running-min 1.3847
+  step  225  loss 1.5303  running-min 1.3080
+  step  250  loss 1.4129  running-min 1.2551
+  step  275  loss 1.6997  running-min 1.2551
+  step  300  loss 1.3998  running-min 1.2551
+  step  325  loss 1.4406  running-min 1.2551
+  step  350  loss 1.2943  running-min 1.1003
+  step  375  loss 0.8280  running-min 0.8142
+  step  400  loss 0.9378  running-min 0.5519
+  step  425  loss 0.9505  running-min 0.5519
+  step  450  loss 0.9262  running-min 0.5519
+  step  475  loss 0.9342  running-min 0.5519
+  step  500  loss 1.0977  running-min 0.5519
+
+rate of decrease of the running minimum (loss units per 100 steps)
+  steps   1-100: 7.9725 -> 2.1273   rate 5.904
+  steps 100-250: 2.1273 -> 1.2551   rate 0.582
+  steps 250-375: 1.2551 -> 0.8142   rate 0.353
+  steps 375-500: 0.8142 -> 0.5519   rate 0.210
+  last step that set a new minimum: 379
+
+best-so-far suffix at checkpoints (target = 6 tokens: ['TEST', '_od', 'powied', 'z', '_test', 'owa'])
+  @100 (best at step 100): loss 2.1273  token acc 0.67 (4/6)  exact False
+        generation 'The test result indicates that the patient has an ORA movable invention medical'
+        suffix     ' esta x obedolleyError x \\\\ verdienen wondermongenschOrDefault:ORAovableventionmedical ...\\tested IST_med'
+  @250 (best at step 241): loss 1.2550  token acc 0.83 (5/6)  exact False
+        generation 'TESTED'
+        suffix     ' esta x.opendolleyError xactiveupyterida Shepherd HenOrDefault:OTOwicklungoutputmedical ...\\tested TRAIN_nat'
+  @375 (best at step 374): loss 0.8142  token acc 0.67 (4/6)  exact False
+        generation 'The option that best fits the given text is:\n\n"TEST_odpowied'
+        suffix     ' esta tho.opendativasastedovationometricsalan Shepherd HenOrDefault "_"ofile _ likelihood lab,\\tested TRAIN_math'
+  @500 (best at step 379): loss 0.5519  token acc 1.00 (6/6)  exact True
+        generation 'TEST_odpowiedz_testowa'
+        suffix     ' esta tho.opendativasastedolaometricsstore Shepherd HenOrDefault "_"ofile Under likelihood lab,\\tested TRAIN_math'
+
+=== CONCLUSION ===
+Observed: exact match IS reached (best suffix from step 379: 6/6 tokens, greedy output is
+exactly 'TEST_odpowiedz_testowa'), but the pace keeps shrinking (running-min drop per 100
+steps: 5.90 -> 0.58 -> 0.35 -> 0.21) and progress comes in jumps after plateaus:
+no improvement in steps 250-345, a drop 1.26 -> 0.55 in steps 346-379, then none for
+the last 121 steps.
+One sentence: closer to option 1 (a budget problem, not a hard wall: 2x the steps took Qwen
+from 5/6 tokens to an exact match), but with strongly diminishing returns and step-like
+progress, so "more steps" alone is an expensive lever and step 500 sits on a plateau.
+Side observation: teacher-forced loss does not map monotonically to success (step 250:
+loss 1.26 and 5/6 tokens; step 375: loss 0.81 and only 4/6 tokens), so a budget check
+should be based on generation/exact match at checkpoints, not on loss alone.
