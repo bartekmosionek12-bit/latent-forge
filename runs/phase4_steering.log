@@ -1,0 +1,37 @@
+target  : <ActivationDirectionTarget kind='activation_direction': direction at layer 3 from 8 pos / 8 neg prompts>
+dispatch: ActivationDirectionTarget -> ActivationSteeringAttack
+
+layer 3: |direction| = 20.90, typical |h_t| on a test prompt = 83.90  (4s)
+projection scale: formal prompts 4.90, informal prompts -15.99
+(alpha > 0 pushes towards FORMAL; alpha = 0 is the unsteered baseline)
+
+=== alpha +0.0  mean projection of output (unsteered re-read): -4.14
+  'Regarding the schedule for next week,'
+    -> ' we’ll be back in a few days.\nThe first day of this month is now over and I will have to wait until tomorrow morning'
+  'I wanted to tell you about the trip.'
+    -> ' I was in a hotel room and there were people who had been on board, but they didn\'t know what happened."\nThe couple\'s family is'
+  'About the new coffee machine in the kitchen:'
+    -> '\nThe first batch of espresso beans is available at a discount. The second, which will be sold on Friday and Saturday (Friday) from 10am'
+=== alpha +2.0  mean projection of output (unsteered re-read): 7.16
+  'Regarding the schedule for next week,'
+    -> ' we are currently preparing a further consultation with our representatives to ensure that all information and consultations will be conducted in accordance of this request.\nThe following additional'
+  'I wanted to tell you about the trip.'
+    -> ' We are currently seeking a request for information regarding our efforts and requests of assistance in this case, as we have not received any additional inquiries or further enqu'
+  'About the new coffee machine in the kitchen:'
+    -> ' a special request to be provided by an independent, and informed consultation of all relevant information.\nThe application is subject only to consideration for further inquiries as'
+=== alpha +4.0  mean projection of output (unsteered re-read): 3.57
+  'Regarding the schedule for next week,'
+    -> ' further information and consultation of additional consultations in support or assistance to Government Information Services (\n: Additional Consult Committee Members by Special Advisory Service Public Pro Council Member'
+  'I wanted to tell you about the trip.'
+    -> ' The information and consultation, further consideration of our Government Information Services (\n: Additional inquiries in or by requests for additional enqu- Special Consult Service Requ Pro'
+  'About the new coffee machine in the kitchen:'
+    -> '\n, and further information of additional inquiries to support or assistance by Government Information Services (. The Department for Public Service as a Special Committee " Additional Consult'
+=== alpha +8.0  mean projection of output (unsteered re-read): 0.91
+  'Regarding the schedule for next week,'
+    -> ' further and additional information of Government Public Information ( or " Additional Special Committee Parliamentary Pro Consult Service in Parliament Members General Advisory Commission Form D Sub Order A P'
+  'I wanted to tell you about the trip.'
+    -> ' The Government, and further Parliamentary Committee of Public Information ( " Additional Special Pro Consult or General Advisory Commission in Parliament Members Sub Service Order Form D P A'
+  'About the new coffee machine in the kitchen:'
+    -> ' Government and Public, further Parliamentary Committee of Special Information ( " Additional Consult or Pro Form A D\n The Department General Advisory Commission on App M P Sub'
+
+saved runs/phase4_steering.json
