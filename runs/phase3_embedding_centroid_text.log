@@ -1,0 +1,28 @@
+target  : <EmbeddingRegionTarget kind='embedding_region': region of 3 refs in sentence-transformers/all-MiniLM-L6-v2>
+dispatch: EmbeddingRegionTarget -> EmbeddingRegionAttack
+
+scale reference: each region text's own distance to the centroid
+  0.2159  Feed your sourdough starter with equal parts flour and water every day.
+  0.2248  A long cold proof in the fridge gives sourdough bread a tangier flavour.
+  0.1752  Bake the sourdough loaf in a preheated Dutch oven for a crisp crust.
+
+steps 200, accepted flips 26, 55s
+  step    0  cosine distance 0.4416
+  step    1  cosine distance 0.4073
+  step    5  cosine distance 0.2749
+  step   10  cosine distance 0.2220
+  step   20  cosine distance 0.1811
+  step   40  cosine distance 0.1777
+  step   60  cosine distance 0.1725
+  step   80  cosine distance 0.1725
+  step  200  cosine distance 0.1725
+
+init span source : 'Bake the sourdough loaf in a preheated Dutch oven for a crisp crust.'
+init span        : 'bake the sourdough loaf in a preheated dutch oven for a'
+optimised span   : 'recipe should homemade sourdou exactly loaf in a fridge cold railways frenchman flour resembles steer'
+
+[payload_only            ] distance 0.9107  'Reminder: the office printer on floor three is offline for maintenance on Friday.'
+[payload_plus_init_span  ] distance 0.4416  'Reminder: the office printer on floor three is offline for maintenance on Friday. bake the sourdough loaf in a preheated dutch oven for a'
+[after_attack            ] distance 0.1725  'Reminder: the office printer on floor three is offline for maintenance on Friday. recipe should homemade sourdou exactly loaf in a fridge cold railways frenchman flour resembles steer'
+
+saved runs/phase3_embedding_centroid_text.json
