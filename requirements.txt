@@ -1,0 +1,7 @@
+# CPU (local): pip install torch --index-url https://download.pytorch.org/whl/cpu
+# GPU (RunPod): pip install torch  (CUDA build)
+torch
+transformers<=4.47.1   # nanogcg 0.3.0 pins transformers<=4.47.1
+nanogcg==0.3.0
+sentence-transformers
+pytest
