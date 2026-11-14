@@ -22,7 +22,7 @@ python -m venv .venv && . .venv/bin/activate
 pip install torch==2.15.0 --index-url https://download.pytorch.org/whl/cpu   # CPU
 pip install -r requirements.txt
 python -m pytest -q                       # 21 tests, ~15 s on CPU
-python scripts/e2e_all_paths.py           # all three paths, one dispatcher (~27 min on CPU, GCG dominates)
+python scripts/e2e_all_paths.py           # all three paths, one dispatcher (~23 min on CPU, GCG dominates)
 ```
 
 The core call site does the same thing for every goal type:

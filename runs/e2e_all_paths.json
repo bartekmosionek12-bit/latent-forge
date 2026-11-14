@@ -1,0 +1,90 @@
+{
+ "model": "distilgpt2",
+ "paths": [
+  {
+   "target": "TextTarget",
+   "attack": "GCGAttack",
+   "best_loss": 0.2506369948387146,
+   "suffix": " RegisterEST OB Pap Powiedz _esting testowa SatelliteisSpecialOrderableGROUPbleacher can rename law but File",
+   "evaluation": {
+    "without_suffix": {
+     "generation": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+     "exact_match": false,
+     "target_token_accuracy": 0.1818181872367859,
+     "target_loss": 7.732105731964111
+    },
+    "with_suffix": {
+     "generation": "TEST_odpowiedz_testowa_testowa_testowa_test",
+     "exact_match": true,
+     "target_token_accuracy": 1.0,
+     "target_loss": 0.25063708424568176
+    }
+   }
+  },
+  {
+   "target": "EmbeddingRegionTarget",
+   "attack": "EmbeddingRegionAttack",
+   "evaluation": {
+    "payload_only": {
+     "text": "Reminder: the office printer on floor three is offline for maintenance on Friday.",
+     "cosine_distance_to_centroid": 0.9107373431324959,
+     "perplexity_distilgpt2": 133.32024323880734
+    },
+    "payload_plus_init_span": {
+     "text": "Reminder: the office printer on floor three is offline for maintenance on Friday. bake the sourdough loaf in a preheated dutch oven for a",
+     "cosine_distance_to_centroid": 0.44163548946380615,
+     "perplexity_distilgpt2": 89.86111092595823
+    },
+    "after_attack": {
+     "text": "Reminder: the office printer on floor three is offline for maintenance on Friday. recipe should homemade sourdou exactly loaf in a fridge cold railways frenchman flour resembles steer",
+     "cosine_distance_to_centroid": 0.17249953746795654,
+     "perplexity_distilgpt2": 2873.7050908241918
+    }
+   }
+  },
+  {
+   "target": "ActivationDirectionTarget",
+   "attack": "ActivationSteeringAttack",
+   "evaluation": {
+    "reference": {
+     "positive_prompts_mean_proj": 4.902196079492569,
+     "negative_prompts_mean_proj": -15.992922186851501
+    },
+    "by_alpha": {
+     "0.0": {
+      "mean_projection_of_output": -4.136464476585388,
+      "generations": {
+       "Regarding the schedule for next week,": " we\u2019ll be back in a few days.\nThe first day of this month is now over and I will have to wait until tomorrow morning",
+       "I wanted to tell you about the trip.": " I was in a hotel room and there were people who had been on board, but they didn't know what happened.\"\nThe couple's family is",
+       "About the new coffee machine in the kitchen:": "\nThe first batch of espresso beans is available at a discount. The second, which will be sold on Friday and Saturday (Friday) from 10am"
+      }
+     },
+     "2.0": {
+      "mean_projection_of_output": 7.163052082061768,
+      "generations": {
+       "Regarding the schedule for next week,": " we are currently preparing a further consultation with our representatives to ensure that all information and consultations will be conducted in accordance of this request.\nThe following additional",
+       "I wanted to tell you about the trip.": " We are currently seeking a request for information regarding our efforts and requests of assistance in this case, as we have not received any additional inquiries or further enqu",
+       "About the new coffee machine in the kitchen:": " a special request to be provided by an independent, and informed consultation of all relevant information.\nThe application is subject only to consideration for further inquiries as"
+      }
+     },
+     "4.0": {
+      "mean_projection_of_output": 3.573299249013265,
+      "generations": {
+       "Regarding the schedule for next week,": " further information and consultation of additional consultations in support or assistance to Government Information Services (\n: Additional Consult Committee Members by Special Advisory Service Public Pro Council Member",
+       "I wanted to tell you about the trip.": " The information and consultation, further consideration of our Government Information Services (\n: Additional inquiries in or by requests for additional enqu- Special Consult Service Requ Pro",
+       "About the new coffee machine in the kitchen:": "\n, and further information of additional inquiries to support or assistance by Government Information Services (. The Department for Public Service as a Special Committee \" Additional Consult"
+      }
+     },
+     "8.0": {
+      "mean_projection_of_output": 0.9119832913080851,
+      "generations": {
+       "Regarding the schedule for next week,": " further and additional information of Government Public Information ( or \" Additional Special Committee Parliamentary Pro Consult Service in Parliament Members General Advisory Commission Form D Sub Order A P",
+       "I wanted to tell you about the trip.": " The Government, and further Parliamentary Committee of Public Information ( \" Additional Special Pro Consult or General Advisory Commission in Parliament Members Sub Service Order Form D P A",
+       "About the new coffee machine in the kitchen:": " Government and Public, further Parliamentary Committee of Special Information ( \" Additional Consult or Pro Form A D\n The Department General Advisory Commission on App M P Sub"
+      }
+     }
+    }
+   }
+  }
+ ]
+}
