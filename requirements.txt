@@ -6,4 +6,5 @@ torch==2.15.0
 transformers==4.47.1          # nanogcg 0.3.0 requires transformers<=4.47.1; Qwen2.5 supported
 nanogcg==0.3.0
 sentence-transformers==5.7.0  # requires transformers>=4.41,<6; inputs_embeds path verified on this version
-pytest
+pytest==9.2.0
+# Phase 4 (activation steering) uses plain torch forward hooks: no extra packages.

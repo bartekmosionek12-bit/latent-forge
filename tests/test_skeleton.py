@@ -14,15 +14,16 @@ def test_targets_kinds():
         TextTarget("")
 
 
-@pytest.mark.parametrize("target,attack_cls", [
-    (TextTarget("TEST"), GCGAttack),
-    (EmbeddingRegionTarget(["a", "b"]), EmbeddingRegionAttack),
-    (ActivationDirectionTarget(["a"], ["b"], layer=1), ActivationSteeringAttack),
+@pytest.mark.parametrize("target,attack_cls,cfg", [
+    (TextTarget("TEST"), GCGAttack, {"num_steps": 3}),
+    (EmbeddingRegionTarget(["a", "b"]), EmbeddingRegionAttack, {"num_steps": 3}),
+    (ActivationDirectionTarget(["a"], ["b"], layer=1), ActivationSteeringAttack, {"max_new_tokens": 3}),
 ])
-def test_dispatcher_routes_by_type(target, attack_cls):
-    attack = dispatcher.select_attack(target, num_steps=3)
+def test_dispatcher_routes_by_type(target, attack_cls, cfg):
+    attack = dispatcher.select_attack(target, **cfg)
     assert type(attack) is attack_cls and attack.target is target
-    assert attack.config["num_steps"] == 3
+    for k, v in cfg.items():
+        assert attack.config[k] == v
 
 
 def test_dispatcher_subclass_and_unknown():

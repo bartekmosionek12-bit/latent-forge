@@ -24,8 +24,13 @@ def residual_activations(bundle, text: str, layer: int) -> torch.Tensor:
     return captured["h"][0].float()
 
 
-def activation_projection(bundle, text: str, direction: torch.Tensor, layer: int) -> float:
-    """Mean over tokens of <h_t, direction/|direction|>."""
+def activation_projection(bundle, text: str, direction: torch.Tensor, layer: int,
+                          skip_first: bool = True) -> float:
+    """Mean over tokens of <h_t, direction/|direction|>. Position 0 is skipped by
+    default: in GPT-2 it carries a huge-norm "attention sink" activation that
+    dominates any mean."""
     h = residual_activations(bundle, text, layer)
+    if skip_first and h.shape[0] > 1:
+        h = h[1:]
     d = direction.float().to(h.device)
     return (h @ (d / d.norm())).mean().item()
