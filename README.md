@@ -132,20 +132,32 @@ In code, this is `ModelConfig(name="Qwen/Qwen2.5-7B-Instruct", dtype="float16")`
 
 - **Steering layer and alpha.** Qwen2.5-7B has 28 layers and d_model 3584 (distilgpt2
   has 6 and 768). Start around the middle layers. Alpha is in units of the raw
-  mean-difference vector, so its optimum moves (see finding C).
-- **GCG `search_width` / `batch_size`.** 7B in fp16 is about 15 GB on a 24 GB A5000.
+  mean-difference vector, so its optimum moves (see finding C). On both models tried,
+  the best alpha put the injected vector at about 0.3 to 0.6x the typical residual norm
+  at that layer, and output broke down near 1x. Use that as the starting grid.
+- **GCG budget.** On Qwen2.5-0.5B-Instruct, 250 steps at search width 256 reached loss
+  1.26 with 5/6 target tokens, not an exact match (distilgpt2: exact by 250). Plan more
+  steps and/or a wider search for 7B. 7B in fp16 is about 15 GB on a 24 GB A5000.
   nanoGCG shrinks the batch on OOM by itself, but setting `batch_size` explicitly avoids
   the retries.
 - **dtype.** The Qwen config's native dtype is bfloat16, which Ampere (A5000) supports.
   fp16 as specified should work; switch to `--dtype bfloat16` if you see overflow/NaN.
+  On CPU, use float32: bf16 runs without NaN there, but its argmax disagrees with fp32
+  on 6 to 11% of prompt positions.
+- **Do not upgrade transformers.** nanoGCG passes its prefix KV cache as legacy tuples.
+  On Qwen, transformers 4.47.1 warns that this format "will be removed in v4.47" but
+  still handles it correctly (evaluator loss = nanoGCG loss).
 
-**Known gaps for an instruct model** (not blocking; worth deciding before the Qwen runs):
+**Instruct-model handling** (implemented and checked on Qwen2.5-0.5B-Instruct):
 
-- `ActivationSteeringAttack` builds directions and generates from **raw text without
-  the chat template**. For Qwen-Instruct you probably want contrastive prompts and test
-  prompts wrapped in the template.
-- Nothing has been executed on Qwen yet. Everything above is checked against the
-  installed library source and the real Qwen tokenizer/config, not against a GPU run.
+- `ActivationSteeringAttack(chat_template="auto")` detects a model-provided chat template
+  (nanoGCG's fallback for base models does not count). In chat mode, each contrastive
+  text is rendered as the assistant reply and only its own tokens are averaged (picked
+  via offset mapping). Test prompts are user turns.
+- `repetition_penalty` defaults to 1.0 in chat mode and 1.3 for base models. 1.3 was
+  needed against distilgpt2 loops but distorted the Qwen baseline.
+- Transfer check before RunPod: `runs/e2e_qwen_small_cpu.log` (see "Transfer check"
+  below). Nothing has run on a GPU or on the 7B model yet.
 
 ## Findings so far (distilgpt2 / all-MiniLM-L6-v2, CPU)
 
@@ -194,6 +206,27 @@ then falls. Stronger injection degenerates the text into formal keyword lists ("
 Public Information ... Committee Parliamentary") that no longer read as the target
 category. The injection strength has an interior optimum that has to be searched per
 model and layer; maximising alpha is counter-productive. Log: `runs/phase4_steering.log`.
+
+### Transfer check: Qwen2.5-0.5B-Instruct (CPU, fp32)
+
+This run uses the same dispatcher, seeds and settings as above. Steering runs in chat mode
+at layer 12 of 24. Log: `runs/e2e_qwen_small_cpu.log`.
+
+| path | distilgpt2 | Qwen2.5-0.5B-Instruct |
+|---|---|---|
+| GCG best loss / token acc / exact | 0.25 / 1.00 / yes | 1.26 / 0.83 / **no** (output `TESTED`) |
+| GCG loss at step 100 | 0.32 | 2.13 |
+| Embedding distance payload → attack | 0.911 → 0.173 | identical: this path does not use the LLM |
+| PPL payload / naive / attack | 133 / 90 / 2874 | 80 / 50 / 1700 (same ratios) |
+| Steering projection, alpha 0 / 1 / 2 / 4 / 8 | -4.14 / – / **7.16** / 3.57 / 0.91 | 1.62 / 2.27 / **2.33** / 1.08 / -0.12 |
+| Steering formal / informal reference | 4.90 / -15.99 | 2.16 / -2.49 |
+
+- **GCG converges far more slowly on a chat-tuned model.** Without a suffix, Qwen refuses
+  the bare prompt.
+- **The non-monotonic steering optimum reproduces.** On Qwen the baseline already leans
+  formal and the peak only just clears the formal reference. The collapse is sharper and
+  takes a different form: repetition loops and stray Chinese tokens instead of keyword
+  lists.
 
 ## How this differs from AdversariaLLM and LLMart
 
