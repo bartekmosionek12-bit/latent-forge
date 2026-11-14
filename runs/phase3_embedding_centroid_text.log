@@ -26,3 +26,22 @@ optimised span   : 'recipe should homemade sourdou exactly loaf in a fridge cold
 [after_attack            ] distance 0.1725  'Reminder: the office printer on floor three is offline for maintenance on Friday. recipe should homemade sourdou exactly loaf in a fridge cold railways frenchman flour resembles steer'
 
 saved runs/phase3_embedding_centroid_text.json
+
+=== perplexity add-on (LM: distilgpt2, measurement only, attack unchanged) ===
+variant                                  cos dist        PPL
+centroid_text:payload_only                 0.9107      133.3
+centroid_text:payload_plus_init_span       0.4416       89.9
+centroid_text:after_attack                 0.1725     2873.7
+neutral:payload_plus_init_span             0.9031      112.0
+neutral:after_attack                       0.1745     3572.8
+  centroid_text:payload_only: 'Reminder: the office printer on floor three is offline for maintenance on Friday.'
+  centroid_text:payload_plus_init_span: 'Reminder: the office printer on floor three is offline for maintenance on Friday. bake the sourdough loaf in a preheated dutch oven for a'
+  centroid_text:after_attack: 'Reminder: the office printer on floor three is offline for maintenance on Friday. recipe should homemade sourdou exactly loaf in a fridge cold railways frenchman flour resembles steer'
+  neutral:payload_plus_init_span: 'Reminder: the office printer on floor three is offline for maintenance on Friday. the the the the the the the the the the the the the the the the'
+  neutral:after_attack: 'Reminder: the office printer on floor three is offline for maintenance on Friday. anyway ur sour starter eat prominently throughout cold flournh loaf somehow how maybe recipe exactly'
+
+Wniosek: zoptymalizowany atak ma perplexity ~2874 (start z tekstu-centroidu) i ~3573
+(start neutralny), czyli ~22-27x wiecej niz sam payload (133) i ~32x wiecej niz naiwna
+konkatenacja (90; dopisanie spojnego zdania o zakwasie wrecz obniza PPL). Naiwna
+konkatenacja zbliza do regionu tylko do 0.44, a gradient do 0.17 kosztem tekstu, ktory
+prosty filtr perplexity (np. progiem ~kilkuset na distilgpt2) wylapalby od razu.

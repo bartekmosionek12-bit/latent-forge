@@ -34,3 +34,10 @@ def test_activation_projection(bundle):
     assert h.shape == (2, bundle.model.config.n_embd)
     d = h.mean(0)
     assert activation_projection(bundle, "hello world", d, 3) > 0
+
+
+def test_perplexity_orders_fluent_below_gibberish(bundle):
+    from evaluation import perplexity
+    fluent = perplexity(bundle, "The cat sat on the mat and fell asleep in the sun.")
+    junk = perplexity(bundle, "mat sun the asleep fell cat sat on and in the the.")
+    assert 1 < fluent < junk
