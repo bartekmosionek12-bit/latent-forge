@@ -22,13 +22,14 @@ ap.add_argument("--topk", type=int, default=128)
 ap.add_argument("--seed", type=int, default=0)
 ap.add_argument("--early-stop", action="store_true",
                 help="nanogcg early_stop: stops when ANY candidate matches, but keeps argmin-loss one")
+ap.add_argument("--verbosity", default="WARNING", help="INFO = nanogcg logs loss + suffix every step")
 ap.add_argument("--out", default="runs/phase2_gcg.json")
 a = ap.parse_args()
 
 bundle = load_model(ModelConfig(name=a.model, dtype=a.dtype))
 target = TextTarget(a.target)
 attack = dispatcher.select_attack(target, num_steps=a.steps, search_width=a.search_width,
-                                  topk=a.topk, seed=a.seed, early_stop=a.early_stop, verbosity="WARNING")
+                                  topk=a.topk, seed=a.seed, early_stop=a.early_stop, verbosity=a.verbosity)
 print(f"target : {target}\ndispatch: {type(target).__name__} -> {type(attack).__name__}")
 
 result, report = dispatcher.run(target, bundle, **attack.config)
