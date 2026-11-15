@@ -1,0 +1,71 @@
+target  : <HiddenStateRegionTarget kind='hidden_state_region': hidden-state region at layer 3 from 3 refs, start prompt 'Yesterday the city council met to discuss'>
+dispatch: HiddenStateRegionTarget -> GCGRegionAttack
+objective: band | block topic tokens: True
+
+[gradient check]
+  ids path loss 0.200180 vs one-hot/inputs_embeds path 0.200180 (|diff| 0.00e+00)
+  dir 0: finite-diff -0.000632  autograd -0.000630  rel.err 3.11e-03
+  dir 1: finite-diff +0.000975  autograd +0.000976  rel.err 1.44e-03
+  dir 2: finite-diff +0.000477  autograd +0.000471  rel.err 1.34e-02
+  dir 3: finite-diff -0.000492  autograd -0.000495  rel.err 6.48e-03
+  dir 4: finite-diff -0.001055  autograd -0.001053  rel.err 2.36e-03
+  128 random single-token swaps: Spearman(first-order prediction, actual change) = -0.145
+  256 swaps from gradient top-128: mean change -0.0090, improve 76% | 256 random swaps: mean change -0.0014, improve 57%
+
+[optimisation] 200 steps, 9 accepted swaps, 683s
+  band objective |d - r|: reference distances 0.1878, 0.1567, 0.1593 -> r = midpoint = 0.1722
+  blocked 990 topic tokens from 124 words; blocked tokens left in final suffix: []
+  step    0  hidden cos dist 0.3724  objective 0.2002
+  step   10  hidden cos dist 0.1722  objective 0.0000
+  step   25  hidden cos dist 0.1722  objective 0.0000
+  step   50  hidden cos dist 0.1722  objective 0.0000
+  step  100  hidden cos dist 0.1722  objective 0.0000
+  step  150  hidden cos dist 0.1722  objective 0.0000
+  step  200  hidden cos dist 0.1722  objective 0.0000
+
+[scale] reference texts themselves: last-token hidden cos dist 0.188, 0.157, 0.159 | MiniLM topic dist 0.172, 0.233, 0.185
+
+[two measures] (1) hidden cos dist = attack loss; (2) topical score of the continuation = MiniLM distance to topic (lower = more on-topic) + cooking-keyword fraction
+  variant        (1) hidden (2) MiniLM  (2) kw
+  no_suffix          0.3046     1.0020   0.000
+  init_filler        0.3724     1.0404   0.000
+  random_0           0.3804     1.0663   0.000
+  random_1           0.3378     1.0192   0.000
+  random_2           0.3642     0.9772   0.000
+  random_3           0.3290     0.9767   0.000
+  random_4           0.3767     1.0701   0.000
+  naive_topical      0.2288     0.4030   0.111
+  optimised          0.1722     0.5778   0.111
+
+[no_suffix]
+  suffix      : ''
+  continuation: ' a plan for an affordable housing project in downtown Toronto.\nThe proposal was approved by councillors on Tuesday, and is expected to be submitted before City Council next week at 1 p:m., according To'
+  keyword hits: []
+[random_0]
+  suffix      : ' Pistons constraint ticks GripgitLago innings FrazNeigh Poles Backup WareINGSwest entrants hypothesized Brussels Engineeno Achievement'
+  continuation: ' in a new project, which would be based on an old-school formula.\nThe idea was that if you had been working with your local team for years and were looking at how much money they'
+  keyword hits: []
+[naive_topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[optimised]
+  suffix      : ' x USDA x x x x x x x x x x x xMar x Pret ground Pourinkle'
+  continuation: '\nThe following is a list of ingredients that are required for this recipe. The ingredient listed below will be used in order not to make any other recipes, but rather as an alternative or substitute (or'
+  keyword hits: ['ingredients', 'recipe', 'ingredient', 'recipes']
+
+[trajectory] both measures at checkpoints of the same run
+  step (1) hidden (2) MiniLM  (2) kw words  continuation
+     0     0.3724     1.0404   0.000    37  ' y\nThe City Council will consider a proposal for an ordinance that wou'
+     1     0.2534     0.9782   0.000    37  '.\nThe City Council will consider a proposal for an alternative solutio'
+     2     0.2340     1.0054   0.000    38  '.\nThe mayor of Toronto has been asked by a group of councillors for th'
+     3     0.2135     1.0570   0.000    36  '\nThe City Council will consider a proposal for an ordinance that would'
+     5     0.1987     0.9670   0.000    31  '\nThe City Council will meet on Tuesday, May 1 at 7:30 p.m., and then t'
+    10     0.1722     0.5778   0.111    36  '\nThe following is a list of ingredients that are required for this rec'
+    25     0.1722     0.5778   0.111    36  '\nThe following is a list of ingredients that are required for this rec'
+    50     0.1722     0.5778   0.111    36  '\nThe following is a list of ingredients that are required for this rec'
+   100     0.1722     0.5778   0.111    36  '\nThe following is a list of ingredients that are required for this rec'
+   150     0.1722     0.5778   0.111    36  '\nThe following is a list of ingredients that are required for this rec'
+   200     0.1722     0.5778   0.111    36  '\nThe following is a list of ingredients that are required for this rec'
+
+saved runs/region_gcg_phase2_AB_band_block.json

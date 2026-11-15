@@ -1,0 +1,77 @@
+=== Region-targeted GCG, Phase 2: same prompt, seed 0, 200 steps, distilgpt2 layer 3 ===
+(1) hidden cos dist (attack metric) | (2) MiniLM dist of continuation to topic (lower = more on-topic) + cooking-keyword hits/words
+
+reference texts: hidden 0.188, 0.157, 0.159 | MiniLM 0.172, 0.233, 0.185
+
+run                    (1) hidden (2) MiniLM  kw hits/words
+ctrl: no suffix            0.3046     1.0020       0/34    
+ctrl: naive topical        0.2288     0.4030       4/37    
+P1  min (Phase 1)          0.1180     0.4180       2/9     
+A   band                   0.1722     0.5684       3/33    
+B   min + block            0.1101     0.6872       4/36    
+A+B band + block           0.1722     0.5778       4/36    
+
+final suffixes and continuations
+[P1  min (Phase 1)]
+  suffix      : 'redients THESE thatput on likeNA N charsG yn Sa Yliber x rehe cris oliveature'
+  continuation: '.\nThe following is a recipe for this dish:'
+  keyword hits: ['recipe', 'dish']
+[A   band] r=0.1722
+  suffix      : 'redients x x x x x x x x x x x x xizen x x Stew Plum infusion'
+  continuation: "\nThe following is a list of ingredients that are listed in this post. The recipe for these recipes will be posted on my blog, and I'll update you as more information becomes available!"
+  keyword hits: ['ingredients', 'recipe', 'recipes']
+[B   min + block] blocked=990 left_in_suffix=[]
+  suffix      : ' usuallyicheverim marg palmaj by 1 and21 minutesELYerves PortugINSJer Sr process nutinate'
+  continuation: '.\nThe first thing you need to do is make sure that your coconut oil has been thoroughly blended with a mixture of water, salt & pepper (or whatever else it may be). If not for'
+  keyword hits: ['oil', 'mixture', 'salt', 'pepper']
+[A+B band + block] r=0.1722 blocked=990 left_in_suffix=[]
+  suffix      : ' x USDA x x x x x x x x x x x xMar x Pret ground Pourinkle'
+  continuation: '\nThe following is a list of ingredients that are required for this recipe. The ingredient listed below will be used in order not to make any other recipes, but rather as an alternative or substitute (or'
+  keyword hits: ['ingredients', 'recipe', 'ingredient', 'recipes']
+
+trajectories: step -> (1) hidden / (2) MiniLM / kw hits
+[P1  min (Phase 1)]
+  0:0.372/1.04/0  1:0.253/0.98/0  2:0.241/1.07/0  3:0.226/1.01/0  5:0.186/0.55/3  10:0.157/0.49/4  25:0.145/0.63/4  50:0.143/0.45/2  100:0.120/0.71/1  150:0.118/0.42/2  200:0.118/0.42/2
+[A   band]
+  0:0.372/1.04/0  1:0.253/0.98/0  2:0.241/1.07/0  3:0.226/1.01/0  5:0.186/0.55/3  10:0.172/0.57/3  25:0.172/0.57/3  50:0.172/0.57/3  100:0.172/0.57/3  150:0.172/0.57/3  200:0.172/0.57/3
+[B   min + block]
+  0:0.372/1.04/0  1:0.253/0.98/0  2:0.234/1.01/0  3:0.213/1.06/0  5:0.199/0.97/0  10:0.170/0.54/3  25:0.137/0.91/0  50:0.116/1.00/0  100:0.110/0.69/4  150:0.110/0.69/4  200:0.110/0.69/4
+[A+B band + block]
+  0:0.372/1.04/0  1:0.253/0.98/0  2:0.234/1.01/0  3:0.213/1.06/0  5:0.199/0.97/0  10:0.172/0.58/4  25:0.172/0.58/4  50:0.172/0.58/4  100:0.172/0.58/4  150:0.172/0.58/4  200:0.172/0.58/4
+
+=== CONCLUSIONS (one prompt, one seed, toy model) ===
+A. Band objective |d - r|, r = 0.1722 (midpoint of the reference range 0.1567-0.1878).
+   The band is reached at step ~10 and the search then freezes (|d - r| ~ 0, no further
+   improving swap), so A is effectively "stop at the first entry into the band".
+   Answer to the key question: NOT clearly better. MiniLM is worse than the overshot
+   Phase 1 result (0.568 vs 0.418) and than the naive topical sentence (0.403). Keyword
+   hits are 3/33 vs 2/9: more absolute hits, lower fraction. The continuation is longer
+   and coherent, but it is still "meta-recipe" text ("a list of ingredients ... the recipe
+   will be posted on my blog"), not cooking content. The two topical components disagree
+   between A and P1: MiniLM prefers P1's 9-word "The following is a recipe for this dish:".
+   Short meta-sentences score well on MiniLM, which is a caveat for measure (2) itself.
+B. Blocked topic tokens (990 tokens from 124 cooking words; none left in any final suffix).
+   The attack still works on measure (1): 0.110, even lower than Phase 1. At the end the
+   continuation is real cooking content ("coconut oil ... blended with a mixture of water,
+   salt & pepper"), 4/36 keywords, MiniLM 0.687. BUT the suffix moved to food-adjacent
+   tokens OUTSIDE the block list: "marg", "palm", "nut", "minutes"; in A+B, "USDA",
+   "ground", "Pour", "inkle". So this does NOT show a "deep", non-lexical mechanism. The
+   likelier reading is that the lexical channel is wider than any finite word list, and
+   the optimiser routes around the block through adjacent vocabulary. Honest verdict:
+   inconclusive, leaning lexical.
+   B's trajectory again shows decoupling: on-topic at step 10 (MiniLM 0.54), off-topic at
+   steps 25-50 (0.91-1.00) while measure (1) kept falling (0.137 -> 0.116), and partly
+   back at 100 (0.69).
+A+B. Same freeze at step 10 in the band: MiniLM 0.578, 4/36 keywords, coherent
+   "list of ingredients required for this recipe" text, with no blocked tokens in the suffix
+   (food-adjacent ones are present, as in B).
+
+CROSS-RUN OBSERVATION: in all four runs topicality switches on at hidden distance
+~0.17-0.19 (steps 5-10), i.e. when the last-token state ENTERS the reference band. Below
+the band, further reduction does not improve topicality (P1, B oscillate). This supports
+"the region, not the minimum" as the right notion of target. But stopping inside the band
+(A) did not by itself beat the naive topical sentence on either topical component.
+
+Suggested next control (not run): block by MEANING rather than by list, e.g. forbid suffix
+tokens whose MiniLM / input-embedding similarity to the topic exceeds a threshold. That
+would test the lexical-vs-latent question properly.
