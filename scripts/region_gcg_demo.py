@@ -41,6 +41,10 @@ ap.add_argument("--block-topic", action="store_true",
 ap.add_argument("--block-semantic", action="store_true",
                 help="Phase 3: also forbid every token MiniLM finds topic-specific vs control topics")
 ap.add_argument("--semantic-margin", type=float, default=0.0)
+ap.add_argument("--readability-weight", type=float, default=0.0,
+                help="Phase 4: J = d + w * CE_suffix (distilgpt2 NLL of the suffix in context)")
+ap.add_argument("--readable-proposals", action="store_true",
+                help="Phase 4: half of top-k swaps from the gradient, half from the model's next-token log-probs")
 ap.add_argument("--out", default="runs/region_gcg_phase1.json")
 a = ap.parse_args()
 
@@ -56,7 +60,8 @@ BLOCK_WORDS = tuple(sorted(({w.lower() for r in COOKING for w in re.findall(r"[a
                            | set(COOKING_KEYWORDS)))
 cfg = dict(n_tokens=a.n_tokens, num_steps=a.steps, search_width=a.search_width,
            topk=a.topk, seed=a.seed, objective=a.objective,
-           blocked_words=BLOCK_WORDS if a.block_topic else ())
+           blocked_words=BLOCK_WORDS if a.block_topic else (),
+           readability_weight=a.readability_weight, readable_proposals=a.readable_proposals)
 SEM = None
 if a.block_semantic:
     from attacks.semantic_block import semantic_block_ids  # noqa: E402
@@ -134,8 +139,9 @@ if SEM is not None:
     print("  final suffix tokens by topic-specificity (spec, sim): "
           + ", ".join(f"{t!r} {sp:+.3f}/{si:.3f}" for sp, si, t in rows[:8]))
 dh = x["distance_history"]
+print(f"  readability weight {a.readability_weight} | readable proposals {a.readable_proposals}")
 for i in sorted({0, 10, 25, 50, 100, 150, len(h) - 1} & set(range(len(h)))):
-    print(f"  step {i:4d}  hidden cos dist {dh[i]:.4f}  objective {h[i]:.4f}")
+    print(f"  step {i:4d}  hidden cos dist {dh[i]:.4f}  suffix CE {x['ce_history'][i]:.3f}  objective {h[i]:.4f}")
 
 ref = report["reference_scale"]
 print("\n[scale] reference texts themselves: last-token hidden cos dist "

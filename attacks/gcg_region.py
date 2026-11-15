@@ -41,6 +41,13 @@ DEFAULTS = dict(
     # Phase 3: extra explicit token ids to forbid (e.g. semantic block); the init
     # filler token is always exempt so the start point is identical across runs
     blocked_token_ids=(),
+    # Phase 4 (AutoDAN-style readability): J = region objective + w * CE_suffix, where
+    # CE_suffix = mean NLL (nats/token) of the suffix under the SAME model, in context
+    readability_weight=0.0,
+    # Phase 4: propose half of the top-k swaps from the gradient and half from the
+    # model's own next-token log-probs at each suffix position (AutoDAN-like)
+    readable_proposals=False,
+    score_chunk=64,            # candidates per forward when the LM head is needed
 )
 
 
@@ -83,6 +90,13 @@ class GCGRegionAttack(Attack):
                            if r == "auto" else float(r))
         elif self.config["objective"] != "min":
             raise ValueError(f"unknown objective {self.config['objective']!r}")
+        self.lm_head = bundle.model.get_output_embeddings()
+        nb = len(self.before_ids)
+        needs_lm = self.config["readability_weight"] > 0 or self.config["readable_proposals"]
+        if needs_lm and nb < 1:
+            raise ValueError("readability term needs a non-empty prefix before the suffix")
+        # logits at positions [nb-1, nb-1+n) predict the n suffix tokens
+        self.span = (max(nb - 1, 0), max(nb - 1, 0) + self.config["n_tokens"])
 
     def _ids(self, text: str, special: bool = False) -> torch.Tensor:
         if not text:
@@ -96,7 +110,9 @@ class GCGRegionAttack(Attack):
         return self.before_str + self.tok.decode(suffix) + self.after_str
 
     # ---- objective ----------------------------------------------------------
-    def _last_state(self, **model_inputs) -> torch.Tensor:
+    def _forward(self, need_lm: bool, **model_inputs):
+        """One pass: last-token block-L state [B, d] and, if need_lm, log-probs [B, n, V]
+        at the positions that predict the suffix tokens (LM head on that span only)."""
         cap = {}
 
         def hook(_m, _a, out):
@@ -104,23 +120,50 @@ class GCGRegionAttack(Attack):
 
         h = self.block.register_forward_hook(hook)
         try:
-            self.bundle.model(**model_inputs)
+            out = self.bundle.model.base_model(**model_inputs)
         finally:
             h.remove()
-        return cap["h"][:, -1, :].float()                         # [B, d]
+        logp = None
+        if need_lm:
+            s, e = self.span
+            logp = self.lm_head(out[0][:, s:e]).float().log_softmax(-1)
+        return cap["h"][:, -1, :].float(), logp
+
+    def _last_state(self, **model_inputs) -> torch.Tensor:
+        return self._forward(False, **model_inputs)[0]            # [B, d]
+
+    def _suffix_of(self, ids: torch.Tensor) -> torch.Tensor:
+        s, e = self.span
+        return ids[:, s + 1:e + 1]
+
+    def scores_ids(self, ids: torch.Tensor, need_ce: bool):
+        """Batched exact (distance [B], CE_suffix [B] or None) for [B, L] ids."""
+        chunk = self.config["score_chunk"] if need_ce else ids.shape[0]
+        ds, ces = [], []
+        with torch.no_grad():
+            for part in ids.split(chunk):
+                h, logp = self._forward(need_ce, input_ids=part)
+                ds.append(1 - torch.nn.functional.cosine_similarity(h, self.centroid[None], dim=-1))
+                if need_ce:
+                    tgt = self._suffix_of(part)[..., None]
+                    ces.append(-logp.gather(-1, tgt)[..., 0].mean(-1))
+        return torch.cat(ds), (torch.cat(ces) if need_ce else None)
+
+    def suffix_ce(self, suffix: torch.Tensor) -> float:
+        return self.scores_ids(self.full_ids(suffix)[None], True)[1].item()
 
     def distance_ids(self, ids: torch.Tensor) -> torch.Tensor:
         """Batched exact cosine distance for [B, L] ids."""
-        with torch.no_grad():
-            h = self._last_state(input_ids=ids)
-        return 1 - torch.nn.functional.cosine_similarity(h, self.centroid[None], dim=-1)
+        return self.scores_ids(ids, False)[0]
 
     def objective(self, d: torch.Tensor) -> torch.Tensor:
         return d if self.radius is None else (d - self.radius).abs()
 
     def loss_ids(self, ids: torch.Tensor) -> torch.Tensor:
-        """Batched exact objective for [B, L] ids."""
-        return self.objective(self.distance_ids(ids))
+        """Batched exact objective J for [B, L] ids (region term + w * CE_suffix)."""
+        w = self.config["readability_weight"]
+        d, ce = self.scores_ids(ids, w > 0)
+        return self.objective(d) if ce is None else self.objective(d) + w * ce
 
     def loss_from_suffix_embeds(self, suffix_embeds: torch.Tensor) -> torch.Tensor:
         """Differentiable loss from [n, d] suffix embeddings (one sequence)."""
@@ -128,11 +171,29 @@ class GCGRegionAttack(Attack):
         h = self._last_state(inputs_embeds=emb[None])[0]
         return self.objective(1 - torch.nn.functional.cosine_similarity(h, self.centroid, dim=0))
 
+    def loss_from_onehot(self, onehot: torch.Tensor) -> torch.Tensor:
+        """Differentiable J from a [n, V] one-hot suffix: the readability term is
+        -mean_i sum_v onehot[i, v] * log p(v | prefix_i), so its gradient also has the
+        direct 'how likely is token v here' part that AutoDAN uses."""
+        w = self.config["readability_weight"]
+        emb = torch.cat([self.W[self.before_ids], onehot @ self.W, self.W[self.after_ids]])
+        h, logp = self._forward(w > 0, inputs_embeds=emb[None])
+        loss = self.objective(1 - torch.nn.functional.cosine_similarity(h[0], self.centroid, dim=0))
+        if w > 0:
+            loss = loss + w * (-(onehot * logp[0]).sum(-1).mean())
+        return loss
+
     def token_grad(self, suffix: torch.Tensor) -> torch.Tensor:
         onehot = torch.nn.functional.one_hot(suffix, self.W.shape[0]).to(self.W.dtype)
         onehot.requires_grad_(True)
-        loss = self.loss_from_suffix_embeds(onehot @ self.W)
-        return torch.autograd.grad(loss, onehot)[0]                # [n, V]
+        return torch.autograd.grad(self.loss_from_onehot(onehot), onehot)[0]   # [n, V]
+
+    def lm_topk(self, suffix: torch.Tensor, k: int) -> torch.Tensor:
+        """[n, k] most likely allowed next tokens at each suffix position (current prefix)."""
+        with torch.no_grad():
+            logp = self._forward(True, input_ids=self.full_ids(suffix)[None])[1][0]
+        logp[:, ~self.allowed] = float("-inf")
+        return logp.topk(k, dim=1).indices
 
     def roundtrip_ok(self, suffix: torch.Tensor) -> bool:
         again = self._ids(self.full_text(suffix), special=True)
@@ -154,11 +215,17 @@ class GCGRegionAttack(Attack):
         history, accepted = [cur], 0
         suffix_history = [self.tok.decode(suffix)]   # suffix after each step (index = step)
         dist_history = [self.distance_ids(self.full_ids(suffix)[None]).item()]
+        ce_history = [self.suffix_ce(suffix)]
 
         for _ in range(c["num_steps"]):
             grad = self.token_grad(suffix)
             grad[:, ~self.allowed] = float("inf")
-            top = (-grad).topk(c["topk"], dim=1).indices
+            if c["readable_proposals"]:
+                k_lm = c["topk"] // 2
+                top = torch.cat([(-grad).topk(c["topk"] - k_lm, dim=1).indices,
+                                 self.lm_topk(suffix, k_lm)], dim=1)
+            else:
+                top = (-grad).topk(c["topk"], dim=1).indices
             pos = torch.randint(0, suffix.numel(), (c["search_width"],), device=self.dev)
             new = top[pos, torch.randint(0, c["topk"], (c["search_width"],), device=self.dev)]
             cands = suffix.repeat(c["search_width"], 1)
@@ -175,6 +242,7 @@ class GCGRegionAttack(Attack):
             history.append(cur)
             suffix_history.append(self.tok.decode(suffix))
             dist_history.append(self.distance_ids(self.full_ids(suffix)[None]).item())
+            ce_history.append(self.suffix_ce(suffix))
 
         suffix_text = self.tok.decode(suffix)
         return AttackResult(
@@ -182,6 +250,7 @@ class GCGRegionAttack(Attack):
             final_loss=dist_history[-1], loss_history=history,
             extra={"init_suffix": self.tok.decode(init_suffix), "accepted_swaps": accepted,
                    "suffix_history": suffix_history, "distance_history": dist_history,
+                   "ce_history": ce_history, "readability_weight": c["readability_weight"],
                    "objective": c["objective"], "radius": self.radius,
                    "reference_distances": self.reference_distances,
                    "n_blocked_tokens": len(self.blocked_ids),
