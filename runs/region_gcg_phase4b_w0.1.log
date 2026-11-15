@@ -1,0 +1,70 @@
+target  : <HiddenStateRegionTarget kind='hidden_state_region': hidden-state region at layer 3 from 3 refs, start prompt 'Yesterday the city council met to discuss'>
+dispatch: HiddenStateRegionTarget -> GCGRegionAttack
+objective: min | block topic tokens (list): False | semantic block: False
+
+[gradient check]
+  ids path loss 0.661923 vs one-hot/inputs_embeds path 0.299965 (|diff| 3.62e-01)
+  dir 0: finite-diff +0.000542  autograd +0.000548  rel.err 1.08e-02
+  dir 1: finite-diff +0.001225  autograd +0.001229  rel.err 3.00e-03
+  dir 2: finite-diff -0.000775  autograd -0.000778  rel.err 4.59e-03
+  dir 3: finite-diff -0.001213  autograd -0.001214  rel.err 8.16e-04
+  dir 4: finite-diff -0.000748  autograd -0.000738  rel.err 1.35e-02
+  128 random single-token swaps: Spearman(first-order prediction, actual change) = 0.767
+  256 swaps from gradient top-128: mean change +0.0477, improve 4% | 256 random swaps: mean change +0.1052, improve 0%
+
+[optimisation] 200 steps, 22 accepted swaps, 777s
+  readability weight 0.1 | readable proposals True
+  step    0  hidden cos dist 0.3000  suffix CE 3.620  objective 0.6619
+  step   10  hidden cos dist 0.2828  suffix CE 3.011  objective 0.5839
+  step   25  hidden cos dist 0.2749  suffix CE 2.591  objective 0.5339
+  step   50  hidden cos dist 0.2759  suffix CE 2.526  objective 0.5285
+  step  100  hidden cos dist 0.2759  suffix CE 2.526  objective 0.5285
+  step  150  hidden cos dist 0.2759  suffix CE 2.526  objective 0.5285
+  step  200  hidden cos dist 0.2759  suffix CE 2.526  objective 0.5285
+
+[scale] reference texts themselves: last-token hidden cos dist 0.188, 0.157, 0.159 | MiniLM topic dist 0.172, 0.233, 0.185
+
+[two measures] (1) hidden cos dist = attack loss; (2) topical score of the continuation = MiniLM distance to topic (lower = more on-topic) + cooking-keyword fraction
+  variant        (1) hidden (2) MiniLM  (2) kw
+  no_suffix          0.3046     1.0020   0.000
+  init_filler        0.3000     1.0111   0.000
+  random_0           0.3804     1.0663   0.000
+  random_1           0.3378     1.0192   0.000
+  random_2           0.3642     0.9772   0.000
+  random_3           0.3290     0.9767   0.000
+  random_4           0.3767     1.0701   0.000
+  naive_topical      0.2288     0.4030   0.111
+  optimised          0.2759     1.0066   0.000
+
+[no_suffix]
+  suffix      : ''
+  continuation: ' a plan for an affordable housing project in downtown Toronto.\nThe proposal was approved by councillors on Tuesday, and is expected to be submitted before City Council next week at 1 p:m., according To'
+  keyword hits: []
+[random_0]
+  suffix      : ' Pistons constraint ticks GripgitLago innings FrazNeigh Poles Backup WareINGSwest entrants hypothesized Brussels Engineeno Achievement'
+  continuation: ' in a new project, which would be based on an old-school formula.\nThe idea was that if you had been working with your local team for years and were looking at how much money they'
+  keyword hits: []
+[naive_topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[optimised]
+  suffix      : ' a plan to replace the council building with a new one and to add the streetlights to the plaza'
+  continuation: '.\nThe proposal was approved by Council President John Tory, who said he would not support it because of its "federalist" nature. The mayor\'s office has been working on an alternative solution'
+  keyword hits: []
+
+[trajectory] both measures at checkpoints of the same run
+  step (1) hidden (2) MiniLM  (2) kw words  continuation
+     0     0.3000     1.0111   0.000    29  '.\nThe new project is expected by mid-2018, but it will be completed wi'
+     1     0.3049     0.9908   0.000    28  '.\nThe project is expected by mid-December, but it will be completed wi'
+     2     0.3014     0.9651   0.000    36  '.\nThe project is expected in late June, but it has been delayed for se'
+     3     0.2996     0.9651   0.000    36  '.\nThe project is expected in late June, but it has been delayed for se'
+     5     0.2924     0.9905   0.000    36  '.\nThe project is expected in May, but it has been delayed for several '
+    10     0.2828     1.0375   0.000    38  '.\nThe City Council approved a motion on Tuesday that would have requir'
+    25     0.2749     1.0074   0.000    35  '.\nThe plan was approved by Councilman John Prentice, who is also in ch'
+    50     0.2759     1.0066   0.000    32  '.\nThe proposal was approved by Council President John Tory, who said h'
+   100     0.2759     1.0066   0.000    32  '.\nThe proposal was approved by Council President John Tory, who said h'
+   150     0.2759     1.0066   0.000    32  '.\nThe proposal was approved by Council President John Tory, who said h'
+   200     0.2759     1.0066   0.000    32  '.\nThe proposal was approved by Council President John Tory, who said h'
+
+saved runs/region_gcg_phase4b_w0.1.json

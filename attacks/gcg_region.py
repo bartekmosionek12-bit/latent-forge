@@ -28,6 +28,8 @@ from .base import Attack, AttackResult
 DEFAULTS = dict(
     n_tokens=20,
     init="x",                  # filler word repeated n_tokens times
+    # Phase 4b: start from this fluent text instead (must be exactly n_tokens tokens)
+    init_text=None,
     num_steps=200,
     topk=128,
     search_width=256,
@@ -201,6 +203,11 @@ class GCGRegionAttack(Attack):
         return again.numel() == full.numel() and bool((again == full).all())
 
     def init_suffix(self) -> torch.Tensor:
+        if self.config["init_text"] is not None:
+            ids = self._ids(self.config["init_text"])
+            if ids.numel() != self.config["n_tokens"]:
+                raise ValueError(f"init_text has {ids.numel()} tokens, need {self.config['n_tokens']}")
+            return ids
         filler = self._ids(" " + self.config["init"])
         return filler.repeat(self.config["n_tokens"])[: self.config["n_tokens"]]
 

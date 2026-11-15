@@ -257,7 +257,7 @@ strategy selection behind it. Richer selection policies plug in at
   pipeline) and the steering-hook semantics are each pinned by a test against the library
   behaviour they rely on.
 
-## Region-targeted GCG (new direction, Phase 1 on a toy model)
+## Region-targeted GCG (research line, Phases 0-4b, closed)
 
 **Research question:** Czy region-targeted GCG daje transferowalny, dostarczany jako zwykly
 tekst (blackbox) odpowiednik activation steeringu - czyli efekt podobny do wstrzykniecia
@@ -340,7 +340,68 @@ This is a documented negative result for a toy setting, not a general one. A lar
 model, a later layer, or an objective over several positions or the continuation itself
 could behave differently; none of these were tested.
 
-Line summary (Phases 0-3): `docs/region_gcg_design.md` (no custom loss in nanoGCG → own
-loop) · `runs/region_gcg_phase1.log` (attack works on the metric; measures diverge) ·
+### Phases 4 and 4b: readability term (AutoDAN-style) and the start point
+
+Phase 4 adds a readability term to the same loop: `J = d + w · CE_suffix`, where CE is
+distilgpt2's own NLL of the suffix in context, and half of the top-k candidates come
+from the model's next-token log-probs (AutoDAN-like). The objective stays `min`, because
+`band` would hide the overshoot being tested. Phase 4b repeats Phase 4 exactly but starts
+from a fluent, off-topic 20-token sentence (" the plan to repair the old bridge near the
+public library and to add more street lights in the park") instead of "x x x". Measure
+(3) is suffix perplexity under an independent model, Qwen2.5-0.5B-Instruct. Natural
+range of the reference texts: d ∈ [0.157, 0.188].
+
+| run | (1) hidden | (2) MiniLM | (2) kw | (3) PPL Qwen | distinct tokens | swaps (last at step) |
+|---|---|---|---|---|---|---|
+| Phase 1, x start, w = 0 | 0.118 | 0.418 | 0.25 | 97 960 | 1.00 | 78 (124) |
+| 4, x start, w = 0.01 | 0.135 | 0.699 | 0.16 | 398 | 0.50 | 26 (35) |
+| 4, x start, w = 0.03 | 0.151 | 0.513 | **0.33** | 43 | 0.30 | 17 (28) |
+| 4, x start, w = 0.1 | 0.245 | 0.977 | 0.00 | 9.7 | 0.15 | 4 (9) |
+| 4b, fluent start, w = 0.01 | 0.141 | 0.943 | 0.00 | 605 | 0.85 | 33 (42) |
+| 4b, fluent start, w = 0.03 | 0.156 | 0.939 | 0.03 | **35** | 0.70 | 32 (38) |
+| 4b, fluent start, w = 0.1 | 0.276 | 1.007 | 0.00 | 17 | 0.75 | 22 (45) |
+
+Example (w = 0.03). x start: `' this and x x x ... x Salad Onion mixture'` → a salad
+ingredient list (9 keyword hits). Fluent start: `' a proposal to add the same name to the
+two recipes and to add the same flavor of sweet potatoes'` → the continuation stays with the
+city council.
+
+- **Readability works on its own terms.** The weight cuts suffix perplexity by 2 to 4
+  orders of magnitude. With the x start that is mostly the repeated filler surviving
+  (repetition has near-minimal CE). With the fluent start the suffixes are real sentences
+  (Qwen PPL 35 at w = 0.03, below the naive topical sentence's 256).
+- **Overshoot shrinks with w, independent of the start.** w = 0.03 lands at the lower edge
+  of the natural range in both cases (0.151 and 0.156); w = 0.1 does not reach the region.
+- **The fluent start explores more but still stalls.** 22 to 33 accepted swaps instead of
+  4 to 26, and only 6 to 8 of the 20 start tokens survive (vs 11 to 18). Every run with
+  w > 0 still stops improving before step 50: single-token swaps hit a local minimum, so
+  the stall is not only the filler attractor.
+- **Topicality depends on the start point, not on the hidden distance.** At practically
+  the same d (0.151 vs 0.156) the x start gives the most topical continuation of the whole
+  line and the fluent start gives none. The optimiser still uses cooking words in both
+  ("Salad Onion"; "recipes", "sweet potatoes", "skillet", "cheese"). After a meaningless
+  filler they decide the continuation. Inside a fluent civic sentence they become objects
+  of a council proposal, and the continuation follows the sentence frame.
+
+### Answer to the research question, whole line (Phases 0-4b)
+
+The Phase 3 answer stands and Phase 4b sharpens it. On this setup, region-targeted GCG is
+**not** a plain-text equivalent of activation steering. What moves the continuation is
+lexical and contextual: topic words, and where they sit in the text. Proximity of one
+last-token state to the region at layer 3 is neither sufficient for topicality (3SA, 4b)
+nor the thing that decides it: the same distance gives a topical or an off-topic
+continuation depending on the surrounding surface text. Adding readability does not
+change this. It makes the suffix fluent and reduces overshoot, and with a fluent start it
+also removes the topical effect.
+
+Scope: distilgpt2, layer 3, one prompt, one seed, one neutral topic, 200 steps. A larger
+model, later layers, a multi-position objective or more seeds were not tested. The line
+is closed here.
+
+Line summary: `docs/region_gcg_design.md` (no custom loss in nanoGCG → own loop; Phase 4
+design) · `runs/region_gcg_phase1.log` (attack works on the metric; measures diverge) ·
 `runs/region_gcg_phase2.log` (band and list block; inconclusive) ·
-`runs/region_gcg_phase3.log` (semantic block; lexical).
+`runs/region_gcg_phase3.log` (semantic block; lexical) ·
+`runs/region_gcg_phase4_autodan.log` (readability; low PPL via the filler) ·
+`runs/region_gcg_phase4b_fluent_init.log` (fluent start; topicality follows the surface
+frame, not the hidden distance).

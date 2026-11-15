@@ -1,0 +1,70 @@
+target  : <HiddenStateRegionTarget kind='hidden_state_region': hidden-state region at layer 3 from 3 refs, start prompt 'Yesterday the city council met to discuss'>
+dispatch: HiddenStateRegionTarget -> GCGRegionAttack
+objective: min | block topic tokens (list): False | semantic block: False
+
+[gradient check]
+  ids path loss 0.408552 vs one-hot/inputs_embeds path 0.299965 (|diff| 1.09e-01)
+  dir 0: finite-diff +0.000542  autograd +0.000548  rel.err 1.08e-02
+  dir 1: finite-diff +0.001225  autograd +0.001229  rel.err 3.00e-03
+  dir 2: finite-diff -0.000775  autograd -0.000778  rel.err 4.59e-03
+  dir 3: finite-diff -0.001213  autograd -0.001214  rel.err 8.16e-04
+  dir 4: finite-diff -0.000748  autograd -0.000738  rel.err 1.35e-02
+  128 random single-token swaps: Spearman(first-order prediction, actual change) = 0.606
+  256 swaps from gradient top-128: mean change +0.0160, improve 5% | 256 random swaps: mean change +0.0336, improve 0%
+
+[optimisation] 200 steps, 32 accepted swaps, 761s
+  readability weight 0.03 | readable proposals True
+  step    0  hidden cos dist 0.3000  suffix CE 3.620  objective 0.4086
+  step   10  hidden cos dist 0.2216  suffix CE 3.587  objective 0.3292
+  step   25  hidden cos dist 0.1504  suffix CE 3.961  objective 0.2692
+  step   50  hidden cos dist 0.1560  suffix CE 3.459  objective 0.2597
+  step  100  hidden cos dist 0.1560  suffix CE 3.459  objective 0.2597
+  step  150  hidden cos dist 0.1560  suffix CE 3.459  objective 0.2597
+  step  200  hidden cos dist 0.1560  suffix CE 3.459  objective 0.2597
+
+[scale] reference texts themselves: last-token hidden cos dist 0.188, 0.157, 0.159 | MiniLM topic dist 0.172, 0.233, 0.185
+
+[two measures] (1) hidden cos dist = attack loss; (2) topical score of the continuation = MiniLM distance to topic (lower = more on-topic) + cooking-keyword fraction
+  variant        (1) hidden (2) MiniLM  (2) kw
+  no_suffix          0.3046     1.0020   0.000
+  init_filler        0.3000     1.0111   0.000
+  random_0           0.3804     1.0663   0.000
+  random_1           0.3378     1.0192   0.000
+  random_2           0.3642     0.9772   0.000
+  random_3           0.3290     0.9767   0.000
+  random_4           0.3767     1.0701   0.000
+  naive_topical      0.2288     0.4030   0.111
+  optimised          0.1560     0.9385   0.031
+
+[no_suffix]
+  suffix      : ''
+  continuation: ' a plan for an affordable housing project in downtown Toronto.\nThe proposal was approved by councillors on Tuesday, and is expected to be submitted before City Council next week at 1 p:m., according To'
+  keyword hits: []
+[random_0]
+  suffix      : ' Pistons constraint ticks GripgitLago innings FrazNeigh Poles Backup WareINGSwest entrants hypothesized Brussels Engineeno Achievement'
+  continuation: ' in a new project, which would be based on an old-school formula.\nThe idea was that if you had been working with your local team for years and were looking at how much money they'
+  keyword hits: []
+[naive_topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[optimised]
+  suffix      : ' a proposal to add the same name to the two recipes and to add the same flavor of sweet potatoes'
+  continuation: '.\nThe idea was first proposed by Councillor John McLeod, who said he wanted it added as part "a new way for people in our neighbourhood." He also suggested adding another ingredient that'
+  keyword hits: ['ingredient']
+
+[trajectory] both measures at checkpoints of the same run
+  step (1) hidden (2) MiniLM  (2) kw words  continuation
+     0     0.3000     1.0111   0.000    29  '.\nThe new project is expected by mid-2018, but it will be completed wi'
+     1     0.2939     0.9973   0.000    35  '.\nThe new project is expected to be completed by mid-2018, but it will'
+     2     0.2885     0.9627   0.000    35  '.\nThe new project is expected in late June, but it will be completed b'
+     3     0.2876     1.0879   0.000    36  '.\nThe proposal was approved by a vote of 7-1, with two votes cast in f'
+     5     0.2754     1.0551   0.000    33  '.\nThe City Council voted 5-3 on Wednesday afternoon, with a vote of 3–'
+    10     0.2216     1.0935   0.000    34  '.\nThe proposal was approved by a vote of 7-4, with only one abstention'
+    25     0.1504     0.8110   0.027    38  '.\nThe idea was that it would be a good way for people who are not fami'
+    50     0.1560     0.9385   0.031    33  '.\nThe idea was first proposed by Councillor John McLeod, who said he w'
+   100     0.1560     0.9385   0.031    33  '.\nThe idea was first proposed by Councillor John McLeod, who said he w'
+   150     0.1560     0.9385   0.031    33  '.\nThe idea was first proposed by Councillor John McLeod, who said he w'
+   200     0.1560     0.9385   0.031    33  '.\nThe idea was first proposed by Councillor John McLeod, who said he w'
+
+saved runs/region_gcg_phase4b_w0.03.json

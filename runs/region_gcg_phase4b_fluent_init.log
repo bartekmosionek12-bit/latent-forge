@@ -1,0 +1,88 @@
+Phase 4b: region-targeted GCG + readability, FLUENT off-topic start instead of 'x x x'
+prompt: 'Yesterday the city council met to discuss' | distilgpt2 block 3 | 20 tokens, 200 steps, width 256, top-k 128, seed 0, objective = min, union proposals, J = d + w * CE_suffix
+fluent start suffix: ' the plan to repair the old bridge near the public library and to add more street lights in the park'
+independent readability model: Qwen/Qwen2.5-0.5B-Instruct | natural range of reference texts: [0.157, 0.188]
+
+[three measures + exploration]
+  run                          (1) hidden  range (2) MiniLM     kw (3) PPL Qwen CE dgpt2 distinct swaps last swap @
+  start: filler x*20               0.3724  above     1.0404  0.000          3.5     1.79     0.05     -           -
+  start: fluent sentence           0.3000  above     1.0111  0.000         24.0     3.62     0.80     -           -
+  baseline: naive topical          0.2288  above     0.4030  0.111        255.8     4.55     0.95     -           -
+  P1  x-init  w=0 (Phase 1)        0.1180  below     0.4180  0.250      97959.8    12.11     1.00    78         124
+  4   x-init  w=0.01               0.1353  below     0.6993  0.156        397.8     5.41     0.50    26          35
+  4   x-init  w=0.03               0.1514  below     0.5131  0.333         43.3     3.48     0.30    17          28
+  4   x-init  w=0.1                0.2451  above     0.9770  0.000          9.7     1.99     0.15     4           9
+  4b  fluent  w=0.01               0.1412  below     0.9430  0.000        604.7     5.38     0.85    33          42
+  4b  fluent  w=0.03               0.1560  below     0.9385  0.031         34.7     3.46     0.70    32          38
+  4b  fluent  w=0.1                0.2759  above     1.0066  0.000         17.1     2.53     0.75    22          45
+
+[trajectory] hidden dist / distilgpt2 suffix CE at checkpoints
+  4   x-init  w=0.01           0:0.372/1.79  10:0.189/3.47  25:0.141/5.07  50:0.135/5.41  100:0.135/5.41  150:0.135/5.41  200:0.135/5.41
+  4   x-init  w=0.03           0:0.372/1.79  10:0.184/3.13  25:0.154/3.58  50:0.151/3.48  100:0.151/3.48  150:0.151/3.48  200:0.151/3.48
+  4   x-init  w=0.1            0:0.372/1.79  10:0.245/1.99  25:0.245/1.99  50:0.245/1.99  100:0.245/1.99  150:0.245/1.99  200:0.245/1.99
+  4b  fluent  w=0.01           0:0.300/3.62  10:0.182/4.54  25:0.151/4.96  50:0.141/5.38  100:0.141/5.38  150:0.141/5.38  200:0.141/5.38
+  4b  fluent  w=0.03           0:0.300/3.62  10:0.222/3.59  25:0.150/3.96  50:0.156/3.46  100:0.156/3.46  150:0.156/3.46  200:0.156/3.46
+  4b  fluent  w=0.1            0:0.300/3.62  10:0.283/3.01  25:0.275/2.59  50:0.276/2.53  100:0.276/2.53  150:0.276/2.53  200:0.276/2.53
+
+[examples] final suffix / continuation / keyword hits (x-init vs fluent at the same weight)
+[start: filler x*20]
+  suffix      : ' x x x x x x x x x x x x x x x x x x x x'
+  continuation: ' y\nThe City Council will consider a proposal for an ordinance that would allow businesses and individuals who are not licensed in any way, including those with disabilities. The proposed legislation is expected to be approved by'
+  keyword hits: []
+[start: fluent sentence]
+  suffix      : ' the plan to repair the old bridge near the public library and to add more street lights in the park'
+  continuation: '.\nThe new project is expected by mid-2018, but it will be completed within a year or two before construction begins on its own site at about 1:30 p...'
+  keyword hits: []
+[baseline: naive topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[P1  x-init  w=0 (Phase 1)]
+  suffix      : 'redients THESE thatput on likeNA N charsG yn Sa Yliber x rehe cris oliveature'
+  continuation: '.\nThe following is a recipe for this dish:'
+  keyword hits: ['recipe', 'dish']
+[4   x-init  w=0.01]
+  suffix      : ' the recipe and x x x x x x x x x x x Chicken Rice Lay per lubric with'
+  continuation: ' a few ingredients.\nThe chicken rice lay is made from two different types of soybeans, which are used in cooking for meat or poultry products (e-mail me at [email protected]. The'
+  keyword hits: ['ingredients', 'chicken', 'rice', 'cooking', 'meat']
+[4   x-init  w=0.03]
+  suffix      : ' this and x x x x x x x x x x x x x x x Salad Onion mixture'
+  continuation: '.\nThe salad is a combination of two ingredients: onion, garlic, basil, peppermint oil, lemon juice, lime leaves, parsley, thyme or any other ingredient that you would like'
+  keyword hits: ['salad', 'ingredients', 'onion', 'garlic', 'basil', 'oil', 'lemon', 'juice', 'ingredient']
+[4   x-init  w=0.1]
+  suffix      : ' banning x x x x x x x x x x x x x x x x x x and'
+  continuation: ' then voted for a resolution that would have allowed X x x x x x x x x x x x y.\nThe City Council unanimously approved this motion, which was signed by Mayor John Tory on'
+  keyword hits: []
+[4b  fluent  w=0.01]
+  suffix      : ' the decision to ask the council and from the public all sides to agree i skillet stir in thy cheese'
+  continuation: '.\nThe following is a video of what happened:'
+  keyword hits: []
+[4b  fluent  w=0.03]
+  suffix      : ' a proposal to add the same name to the two recipes and to add the same flavor of sweet potatoes'
+  continuation: '.\nThe idea was first proposed by Councillor John McLeod, who said he wanted it added as part "a new way for people in our neighbourhood." He also suggested adding another ingredient that'
+  keyword hits: ['ingredient']
+[4b  fluent  w=0.1]
+  suffix      : ' a plan to replace the council building with a new one and to add the streetlights to the plaza'
+  continuation: '.\nThe proposal was approved by Council President John Tory, who said he would not support it because of its "federalist" nature. The mayor\'s office has been working on an alternative solution'
+  keyword hits: []
+
+[how much of the start survives] tokens of the final suffix identical to the start, same position
+  4   x-init  w=0.01           11/20
+  4   x-init  w=0.03           15/20
+  4   x-init  w=0.1            18/20
+  4b  fluent  w=0.01           7/20
+  4b  fluent  w=0.03           6/20
+  4b  fluent  w=0.1            8/20
+
+[mid-run suffixes, fluent start]
+  4b  fluent  w=0.01           step  10: ' the plan to close the entire street near the public gallery and to add more skillet colour to the cheese'
+  4b  fluent  w=0.01           step  50: ' the decision to ask the council and from the public all sides to agree i skillet stir in thy cheese'
+  4b  fluent  w=0.01           step 100: ' the decision to ask the council and from the public all sides to agree i skillet stir in thy cheese'
+  4b  fluent  w=0.03           step  10: ' the plan to add the streetlights to the public menu and to add more street lights to the mushrooms'
+  4b  fluent  w=0.03           step  50: ' a proposal to add the same name to the two recipes and to add the same flavor of sweet potatoes'
+  4b  fluent  w=0.03           step 100: ' a proposal to add the same name to the two recipes and to add the same flavor of sweet potatoes'
+  4b  fluent  w=0.1            step  10: ' the plan to replace the existing building with the public square and to add new street lights to the plaza'
+  4b  fluent  w=0.1            step  50: ' a plan to replace the council building with a new one and to add the streetlights to the plaza'
+  4b  fluent  w=0.1            step 100: ' a plan to replace the council building with a new one and to add the streetlights to the plaza'
+
+saved runs/region_gcg_phase4b_fluent_init.json

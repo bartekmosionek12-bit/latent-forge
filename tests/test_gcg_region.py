@@ -138,3 +138,12 @@ def test_tiny_readable_run_lowers_combined_objective(bundle):
     assert h == sorted(h, reverse=True) and h[-1] < h[0]
     assert len(x["ce_history"]) == len(h)
     assert h[-1] == pytest.approx(x["distance_history"][-1] + 0.03 * x["ce_history"][-1], abs=1e-4)
+
+
+def test_fluent_init_text_is_used_and_length_checked(bundle):
+    t = HiddenStateRegionTarget(REFS, layer=3)
+    a = GCGRegionAttack(t, n_tokens=4, init_text=" the old bridge was")
+    a.setup(bundle)
+    assert bundle.tokenizer.decode(a.init_suffix()) == " the old bridge was"
+    with pytest.raises(ValueError):
+        GCGRegionAttack(t, n_tokens=5, init_text=" the old bridge was").setup(bundle)

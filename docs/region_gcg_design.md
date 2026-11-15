@@ -181,3 +181,14 @@ readability term in the loss.
    Qwen2.5-0.5B-Instruct (raw text, suffix tokens conditioned on the prompt). distilgpt2
    CE is also reported, but it is circular (it is the term being optimised).
    Baselines for (3): filler, Phase 1 suffix, naive topical, random suffix.
+
+## Phase 4b: fluent start point
+
+Phase 4 showed that the "x x x" start is a degenerate attractor for the readability term
+(repetition has near-minimal CE). Phase 4b repeats Phase 4 exactly (w = 0.01 / 0.03 / 0.1,
+union proposals, `min`, same prompt, model, seed, budget) with `init_text` = " the plan to
+repair the old bridge near the public library and to add more street lights in the park":
+exactly 20 distilgpt2 tokens, off-topic (no cooking keyword), fluent (CE 3.62 nats/token,
+Qwen-0.5B PPL 24), and deliberately not a repetition of the prompt, which would be another
+induction-style attractor. Results: `runs/region_gcg_phase4b_fluent_init.log` and the
+README.

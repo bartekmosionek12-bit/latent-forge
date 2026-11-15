@@ -1,0 +1,70 @@
+target  : <HiddenStateRegionTarget kind='hidden_state_region': hidden-state region at layer 3 from 3 refs, start prompt 'Yesterday the city council met to discuss'>
+dispatch: HiddenStateRegionTarget -> GCGRegionAttack
+objective: min | block topic tokens (list): False | semantic block: False
+
+[gradient check]
+  ids path loss 0.336160 vs one-hot/inputs_embeds path 0.299965 (|diff| 3.62e-02)
+  dir 0: finite-diff +0.000542  autograd +0.000548  rel.err 1.08e-02
+  dir 1: finite-diff +0.001225  autograd +0.001229  rel.err 3.00e-03
+  dir 2: finite-diff -0.000775  autograd -0.000778  rel.err 4.59e-03
+  dir 3: finite-diff -0.001213  autograd -0.001214  rel.err 8.16e-04
+  dir 4: finite-diff -0.000748  autograd -0.000738  rel.err 1.35e-02
+  128 random single-token swaps: Spearman(first-order prediction, actual change) = 0.448
+  256 swaps from gradient top-128: mean change +0.0065, improve 18% | 256 random swaps: mean change +0.0131, improve 0%
+
+[optimisation] 200 steps, 33 accepted swaps, 721s
+  readability weight 0.01 | readable proposals True
+  step    0  hidden cos dist 0.3000  suffix CE 3.620  objective 0.3362
+  step   10  hidden cos dist 0.1819  suffix CE 4.537  objective 0.2272
+  step   25  hidden cos dist 0.1505  suffix CE 4.964  objective 0.2002
+  step   50  hidden cos dist 0.1412  suffix CE 5.376  objective 0.1950
+  step  100  hidden cos dist 0.1412  suffix CE 5.376  objective 0.1950
+  step  150  hidden cos dist 0.1412  suffix CE 5.376  objective 0.1950
+  step  200  hidden cos dist 0.1412  suffix CE 5.376  objective 0.1950
+
+[scale] reference texts themselves: last-token hidden cos dist 0.188, 0.157, 0.159 | MiniLM topic dist 0.172, 0.233, 0.185
+
+[two measures] (1) hidden cos dist = attack loss; (2) topical score of the continuation = MiniLM distance to topic (lower = more on-topic) + cooking-keyword fraction
+  variant        (1) hidden (2) MiniLM  (2) kw
+  no_suffix          0.3046     1.0020   0.000
+  init_filler        0.3000     1.0111   0.000
+  random_0           0.3804     1.0663   0.000
+  random_1           0.3378     1.0192   0.000
+  random_2           0.3642     0.9772   0.000
+  random_3           0.3290     0.9767   0.000
+  random_4           0.3767     1.0701   0.000
+  naive_topical      0.2288     0.4030   0.111
+  optimised          0.1412     0.9430   0.000
+
+[no_suffix]
+  suffix      : ''
+  continuation: ' a plan for an affordable housing project in downtown Toronto.\nThe proposal was approved by councillors on Tuesday, and is expected to be submitted before City Council next week at 1 p:m., according To'
+  keyword hits: []
+[random_0]
+  suffix      : ' Pistons constraint ticks GripgitLago innings FrazNeigh Poles Backup WareINGSwest entrants hypothesized Brussels Engineeno Achievement'
+  continuation: ' in a new project, which would be based on an old-school formula.\nThe idea was that if you had been working with your local team for years and were looking at how much money they'
+  keyword hits: []
+[naive_topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[optimised]
+  suffix      : ' the decision to ask the council and from the public all sides to agree i skillet stir in thy cheese'
+  continuation: '.\nThe following is a video of what happened:'
+  keyword hits: []
+
+[trajectory] both measures at checkpoints of the same run
+  step (1) hidden (2) MiniLM  (2) kw words  continuation
+     0     0.3000     1.0111   0.000    29  '.\nThe new project is expected by mid-2018, but it will be completed wi'
+     1     0.2906     0.9675   0.000    34  '.\nThe new light bulbs will be installed at a cost of £1,000 each for e'
+     2     0.2860     0.9548   0.000    33  '.\nThe new light bulbs will be installed at a cost of £1,000 each for e'
+     3     0.2600     1.0145   0.000    35  's.\nThe new light bulbs will be installed at a cost of £1,000 each for '
+     5     0.2278     0.9853   0.000    36  '.\nThe new project will be completed by July 1st, 2017 at a cost of £1 '
+    10     0.1819     1.0414   0.000    35  '.\nThe proposal was approved by a vote of 7-1, with only one abstention'
+    25     0.1505     0.7668   0.133    29  '.\nThe mayor\'s office said it was "deeply disappointed" that a pan-frie'
+    50     0.1412     0.9430   0.000     9  '.\nThe following is a video of what happened:'
+   100     0.1412     0.9430   0.000     9  '.\nThe following is a video of what happened:'
+   150     0.1412     0.9430   0.000     9  '.\nThe following is a video of what happened:'
+   200     0.1412     0.9430   0.000     9  '.\nThe following is a video of what happened:'
+
+saved runs/region_gcg_phase4b_w0.01.json

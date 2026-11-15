@@ -45,6 +45,8 @@ ap.add_argument("--readability-weight", type=float, default=0.0,
                 help="Phase 4: J = d + w * CE_suffix (distilgpt2 NLL of the suffix in context)")
 ap.add_argument("--readable-proposals", action="store_true",
                 help="Phase 4: half of top-k swaps from the gradient, half from the model's next-token log-probs")
+ap.add_argument("--init-text", default=None,
+                help="Phase 4b: fluent start suffix (exactly --n-tokens tokens) instead of 'x x x'")
 ap.add_argument("--out", default="runs/region_gcg_phase1.json")
 a = ap.parse_args()
 
@@ -61,7 +63,8 @@ BLOCK_WORDS = tuple(sorted(({w.lower() for r in COOKING for w in re.findall(r"[a
 cfg = dict(n_tokens=a.n_tokens, num_steps=a.steps, search_width=a.search_width,
            topk=a.topk, seed=a.seed, objective=a.objective,
            blocked_words=BLOCK_WORDS if a.block_topic else (),
-           readability_weight=a.readability_weight, readable_proposals=a.readable_proposals)
+           readability_weight=a.readability_weight, readable_proposals=a.readable_proposals,
+           init_text=a.init_text)
 SEM = None
 if a.block_semantic:
     from attacks.semantic_block import semantic_block_ids  # noqa: E402
