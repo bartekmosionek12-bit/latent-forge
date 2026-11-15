@@ -35,15 +35,28 @@ ap.add_argument("--steps", type=int, default=200)
 ap.add_argument("--search-width", type=int, default=256)
 ap.add_argument("--topk", type=int, default=128)
 ap.add_argument("--seed", type=int, default=0)
+ap.add_argument("--objective", default="min", choices=["min", "band"])
+ap.add_argument("--block-topic", action="store_true",
+                help="forbid suffix tokens that are part of cooking words (reference words + keyword list)")
 ap.add_argument("--out", default="runs/region_gcg_phase1.json")
 a = ap.parse_args()
 
 bundle = load_model(ModelConfig(name=a.model, dtype=a.dtype))
 target = HiddenStateRegionTarget(COOKING, layer=a.layer, prompt=a.prompt)
+STOP = {"the", "and", "then", "them", "in", "it", "with", "for", "until", "a", "hot", "twenty",
+        "minutes", "serve"}
+import re  # noqa: E402
+
+from evaluation.topical import COOKING_KEYWORDS  # noqa: E402
+
+BLOCK_WORDS = tuple(sorted(({w.lower() for r in COOKING for w in re.findall(r"[a-zA-Z]+", r)} - STOP)
+                           | set(COOKING_KEYWORDS)))
 cfg = dict(n_tokens=a.n_tokens, num_steps=a.steps, search_width=a.search_width,
-           topk=a.topk, seed=a.seed)
+           topk=a.topk, seed=a.seed, objective=a.objective,
+           blocked_words=BLOCK_WORDS if a.block_topic else ())
 attack = dispatcher.select_attack(target, **cfg)
 print(f"target  : {target}\ndispatch: {type(target).__name__} -> {type(attack).__name__}")
+print(f"objective: {a.objective} | block topic tokens: {a.block_topic}")
 
 # ---- independent gradient verification (before the run) -----------------------
 attack.setup(bundle)
@@ -95,10 +108,17 @@ print(f"  256 swaps from gradient top-{a.topk}: mean change {dg.mean():+.4f}, im
 # ---- the run through the dispatcher -------------------------------------------
 result, report = dispatcher.run(target, bundle, **cfg)
 h = result.loss_history
-print(f"\n[optimisation] {len(h) - 1} steps, {result.extra['accepted_swaps']} accepted swaps, "
-      f"{result.extra['seconds']:.0f}s")
+x = result.extra
+print(f"\n[optimisation] {len(h) - 1} steps, {x['accepted_swaps']} accepted swaps, {x['seconds']:.0f}s")
+if x["radius"] is not None:
+    print(f"  band objective |d - r|: reference distances "
+          + ", ".join(f"{d:.4f}" for d in x["reference_distances"]) + f" -> r = midpoint = {x['radius']:.4f}")
+if a.block_topic:
+    print(f"  blocked {x['n_blocked_tokens']} topic tokens from {len(BLOCK_WORDS)} words; "
+          f"blocked tokens left in final suffix: {x['blocked_tokens_in_suffix']}")
+dh = x["distance_history"]
 for i in sorted({0, 10, 25, 50, 100, 150, len(h) - 1} & set(range(len(h)))):
-    print(f"  step {i:4d}  hidden cos dist {h[i]:.4f}")
+    print(f"  step {i:4d}  hidden cos dist {dh[i]:.4f}  objective {h[i]:.4f}")
 
 ref = report["reference_scale"]
 print("\n[scale] reference texts themselves: last-token hidden cos dist "

@@ -32,6 +32,12 @@ DEFAULTS = dict(
     topk=128,
     search_width=256,
     seed=0,
+    # Phase 2A: "min" = minimise distance (Phase 1); "band" = minimise |d - radius|,
+    # i.e. land at the distance where real topical texts sit instead of overshooting.
+    objective="min",
+    target_radius="auto",      # "auto" = midpoint of the reference texts' own range
+    # Phase 2B: words whose subword tokens may NOT be used in the suffix
+    blocked_words=(),
 )
 
 
@@ -57,6 +63,21 @@ class GCGRegionAttack(Attack):
         self.after_ids = self._ids(self.after_str)
         self.centroid = self.target.centroid(bundle).to(self.dev)
         self.allowed = allowed_token_mask(self.tok, self.W.shape[0]).to(self.dev)
+        self.blocked_ids = blocked_token_ids(self.tok, self.config["blocked_words"])
+        if self.blocked_ids:
+            self.allowed[torch.tensor(sorted(self.blocked_ids), device=self.dev)] = False
+        self.reference_distances = None
+        self.radius = None
+        if self.config["objective"] == "band":
+            from evaluation.hidden_region import last_token_distance
+
+            self.reference_distances = [last_token_distance(bundle, r, self.target.layer, self.centroid)
+                                        for r in self.target.reference_texts]
+            r = self.config["target_radius"]
+            self.radius = ((min(self.reference_distances) + max(self.reference_distances)) / 2
+                           if r == "auto" else float(r))
+        elif self.config["objective"] != "min":
+            raise ValueError(f"unknown objective {self.config['objective']!r}")
 
     def _ids(self, text: str, special: bool = False) -> torch.Tensor:
         if not text:
@@ -83,17 +104,24 @@ class GCGRegionAttack(Attack):
             h.remove()
         return cap["h"][:, -1, :].float()                         # [B, d]
 
-    def loss_ids(self, ids: torch.Tensor) -> torch.Tensor:
-        """Batched exact loss for [B, L] ids."""
+    def distance_ids(self, ids: torch.Tensor) -> torch.Tensor:
+        """Batched exact cosine distance for [B, L] ids."""
         with torch.no_grad():
             h = self._last_state(input_ids=ids)
         return 1 - torch.nn.functional.cosine_similarity(h, self.centroid[None], dim=-1)
+
+    def objective(self, d: torch.Tensor) -> torch.Tensor:
+        return d if self.radius is None else (d - self.radius).abs()
+
+    def loss_ids(self, ids: torch.Tensor) -> torch.Tensor:
+        """Batched exact objective for [B, L] ids."""
+        return self.objective(self.distance_ids(ids))
 
     def loss_from_suffix_embeds(self, suffix_embeds: torch.Tensor) -> torch.Tensor:
         """Differentiable loss from [n, d] suffix embeddings (one sequence)."""
         emb = torch.cat([self.W[self.before_ids], suffix_embeds, self.W[self.after_ids]])
         h = self._last_state(inputs_embeds=emb[None])[0]
-        return 1 - torch.nn.functional.cosine_similarity(h, self.centroid, dim=0)
+        return self.objective(1 - torch.nn.functional.cosine_similarity(h, self.centroid, dim=0))
 
     def token_grad(self, suffix: torch.Tensor) -> torch.Tensor:
         onehot = torch.nn.functional.one_hot(suffix, self.W.shape[0]).to(self.W.dtype)
@@ -120,6 +148,7 @@ class GCGRegionAttack(Attack):
         cur = self.loss_ids(self.full_ids(suffix)[None]).item()
         history, accepted = [cur], 0
         suffix_history = [self.tok.decode(suffix)]   # suffix after each step (index = step)
+        dist_history = [self.distance_ids(self.full_ids(suffix)[None]).item()]
 
         for _ in range(c["num_steps"]):
             grad = self.token_grad(suffix)
@@ -140,13 +169,19 @@ class GCGRegionAttack(Attack):
                     break
             history.append(cur)
             suffix_history.append(self.tok.decode(suffix))
+            dist_history.append(self.distance_ids(self.full_ids(suffix)[None]).item())
 
         suffix_text = self.tok.decode(suffix)
         return AttackResult(
             target=self.target, attack=type(self).__name__, payload=suffix_text,
-            final_loss=cur, loss_history=history,
+            final_loss=dist_history[-1], loss_history=history,
             extra={"init_suffix": self.tok.decode(init_suffix), "accepted_swaps": accepted,
-                   "suffix_history": suffix_history,
+                   "suffix_history": suffix_history, "distance_history": dist_history,
+                   "objective": c["objective"], "radius": self.radius,
+                   "reference_distances": self.reference_distances,
+                   "n_blocked_tokens": len(self.blocked_ids),
+                   "blocked_tokens_in_suffix": [self.tok.decode([i]) for i in suffix.tolist()
+                                                if i in self.blocked_ids],
                    "seconds": time.time() - t0, "config": dict(c)},
         )
 
@@ -162,3 +197,30 @@ def allowed_token_mask(tokenizer, vocab_size: int) -> torch.Tensor:
         if s.isascii() and any(ch.isalnum() for ch in s) and "\n" not in s:
             mask[i] = True
     return mask
+
+
+def blocked_token_ids(tokenizer, words) -> set[int]:
+    """All vocab tokens that are part of, or contain, the given topic words.
+
+    1. every token produced when tokenising each word in common surface forms
+       (lower / Capitalised / UPPER, with and without a leading space);
+    2. every token whose letters (lower-cased, >= 4 chars) are a substring of a word,
+       which catches subword pieces like "redients" (ingredients) or "oliv" (olive);
+    3. every token that contains a word of >= 4 letters (e.g. "cooking" in "cookingware").
+    """
+    words = sorted({w.lower() for w in words if w})
+    if not words:
+        return set()
+    ids: set[int] = set()
+    for w in words:
+        for form in (w, w.capitalize(), w.upper()):
+            for pre in ("", " "):
+                ids.update(tokenizer(pre + form, add_special_tokens=False)["input_ids"])
+    long_words = [w for w in words if len(w) >= 4]
+    for i in range(len(tokenizer)):
+        t = "".join(ch for ch in tokenizer.decode([i]).lower() if ch.isalpha())
+        if len(t) >= 4 and any(t in w for w in words):
+            ids.add(i)
+        elif len(t) >= 4 and any(w in t for w in long_words):
+            ids.add(i)
+    return ids

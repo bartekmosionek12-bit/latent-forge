@@ -53,3 +53,23 @@ def test_tiny_run_lowers_hidden_distance_and_reports_both_measures(bundle):
     assert {"hidden_cos_dist", "minilm_cos_dist_to_topic", "keyword_frac", "continuation"} <= set(v)
     # shipped as a string: re-tokenised hidden distance equals the attack's own number
     assert v["hidden_cos_dist"] == pytest.approx(result.final_loss, abs=1e-4)
+
+
+def test_blocked_tokens_cover_subwords_and_spare_neutral(bundle):
+    from attacks.gcg_region import blocked_token_ids
+
+    ids = blocked_token_ids(bundle.tokenizer, ["ingredients", "olive", "recipe"])
+    tok = bundle.tokenizer
+    for piece in ["redients", " Olive", " recipe"]:
+        assert all(i in ids for i in tok(piece, add_special_tokens=False)["input_ids"])
+    for neutral in [" council", " the", " x"]:
+        assert not any(i in ids for i in tok(neutral, add_special_tokens=False)["input_ids"])
+
+
+def test_band_objective_uses_reference_midpoint(bundle):
+    a = GCGRegionAttack(HiddenStateRegionTarget(REFS, layer=3), objective="band", n_tokens=4)
+    a.setup(bundle)
+    lo, hi = min(a.reference_distances), max(a.reference_distances)
+    assert a.radius == pytest.approx((lo + hi) / 2)
+    d = a.distance_ids(a.full_ids(a.init_suffix())[None])
+    assert a.loss_ids(a.full_ids(a.init_suffix())[None]).item() == pytest.approx(abs(d.item() - a.radius), abs=1e-6)
