@@ -295,3 +295,52 @@ Findings so far (one prompt, one seed, toy model; log: `runs/region_gcg_phase1.l
   continuation announces a recipe instead of containing cooking content.
 - **Partly lexical.** The suffix contains topical sub-word fragments ("redients",
   "olive"), so the effect is not purely steering-like.
+
+### Phases 2 and 3: band objective, lexical blocking, semantic blocking
+
+Same prompt, seed 0, 200 steps. Full table, suffixes, continuations and trajectories:
+`runs/region_gcg_phase3.log`.
+
+| run | (1) hidden | (2) MiniLM | (2) keywords |
+|---|---|---|---|
+| naive topical sentence (control) | 0.229 | 0.403 | 4/37 |
+| Phase 1: minimise | 0.118 | 0.418 | 2/9 |
+| 2A: band \|d − r\|, r = 0.172 | 0.172 | 0.568 | 3/33 |
+| 2B: minimise, 990 list-blocked tokens | 0.110 | 0.687 | 4/36 |
+| 3S: minimise, 6319 semantically blocked tokens | 0.121 | 0.415 | 1/11 |
+| **3SA: band, 6319 semantically blocked tokens** | **0.172** | **0.895** | **0/30** |
+
+- **Semantic block.** A token is blocked when a separate encoder (MiniLM) places it closer
+  to cooking than to all 7 control topics. That is 5675 tokens, 11.3% of the vocabulary;
+  "the", "a", "and" and "council" stay allowed. The Phase 2 subword list is added on top,
+  because single fragments like "redients" are not recognised on their own. distilgpt2's
+  own embedding matrix was rejected as the similarity space: its nearest tokens to the
+  topic are function words.
+- **The band reached without topic tokens does nothing for topicality (3SA).** The
+  continuation stays about the city council.
+- **Topicality survives the semantic block only through compositional surface cues (3S).**
+  Recipe-instruction words that are not cooking-specific one by one ("Heat", "thinly",
+  "mins", "repeat") read as a recipe together. It also appears only from about step 100,
+  long after the state is already inside the band.
+
+### Answer to the research question (for this setup)
+
+**No evidence was found that region-targeted GCG delivers, as plain text, a steering-like
+effect independent of the text's surface.** On distilgpt2 (layer 3, last-token cosine
+objective, one prompt, one seed, one topic) the effect was predominantly lexical:
+
+- Reaching the natural hidden-state band without topic-specific tokens did not produce a
+  topical continuation.
+- The Phase 2 observation that topicality switches on at band entry held only while
+  topical tokens were allowed.
+- Hidden-state proximity at one position is necessary but not sufficient. In every run
+  it could be driven below the reference range while the continuation stayed off-topic.
+
+This is a documented negative result for a toy setting, not a general one. A larger
+model, a later layer, or an objective over several positions or the continuation itself
+could behave differently; none of these were tested.
+
+Line summary (Phases 0-3): `docs/region_gcg_design.md` (no custom loss in nanoGCG → own
+loop) · `runs/region_gcg_phase1.log` (attack works on the metric; measures diverge) ·
+`runs/region_gcg_phase2.log` (band and list block; inconclusive) ·
+`runs/region_gcg_phase3.log` (semantic block; lexical).

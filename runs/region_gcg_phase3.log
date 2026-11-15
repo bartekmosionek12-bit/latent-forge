@@ -1,0 +1,105 @@
+=== Region-targeted GCG, Phases 1-3: same prompt, seed 0, 200 steps, distilgpt2 layer 3 ===
+block: list = 990 subword tokens of 124 cooking words (Phase 2); semantic = list + 5675 tokens MiniLM finds
+closer to cooking than to all 7 control topics (Phase 3), 6319 in total
+
+(1) hidden cos dist (attack metric) | (2) MiniLM dist of continuation to topic (lower = more on-topic) + cooking-keyword hits/words
+
+reference texts: hidden 0.188, 0.157, 0.159 | MiniLM 0.172, 0.233, 0.185
+
+run                    (1) hidden (2) MiniLM  kw hits/words
+ctrl: no suffix            0.3046     1.0020       0/34    
+ctrl: naive topical        0.2288     0.4030       4/37    
+P1  min (Phase 1)          0.1180     0.4180       2/9     
+A   band                   0.1722     0.5684       3/33    
+B   min + block            0.1101     0.6872       4/36    
+A+B band + block           0.1722     0.5778       4/36    
+S   min + semantic         0.1205     0.4151       1/11    
+SA  band + semantic        0.1722     0.8946       0/30    
+
+final suffixes and continuations
+[P1  min (Phase 1)]
+  suffix      : 'redients THESE thatput on likeNA N charsG yn Sa Yliber x rehe cris oliveature'
+  continuation: '.\nThe following is a recipe for this dish:'
+  keyword hits: ['recipe', 'dish']
+[A   band] r=0.1722
+  suffix      : 'redients x x x x x x x x x x x x xizen x x Stew Plum infusion'
+  continuation: "\nThe following is a list of ingredients that are listed in this post. The recipe for these recipes will be posted on my blog, and I'll update you as more information becomes available!"
+  keyword hits: ['ingredients', 'recipe', 'recipes']
+[B   min + block] blocked=990 left_in_suffix=[]
+  suffix      : ' usuallyicheverim marg palmaj by 1 and21 minutesELYerves PortugINSJer Sr process nutinate'
+  continuation: '.\nThe first thing you need to do is make sure that your coconut oil has been thoroughly blended with a mixture of water, salt & pepper (or whatever else it may be). If not for'
+  keyword hits: ['oil', 'mixture', 'salt', 'pepper']
+[A+B band + block] r=0.1722 blocked=990 left_in_suffix=[]
+  suffix      : ' x USDA x x x x x x x x x x x xMar x Pret ground Pourinkle'
+  continuation: '\nThe following is a list of ingredients that are required for this recipe. The ingredient listed below will be used in order not to make any other recipes, but rather as an alternative or substitute (or'
+  keyword hits: ['ingredients', 'recipe', 'ingredient', 'recipes']
+[S   min + semantic] blocked=6319 left_in_suffix=[]
+  suffix      : ' grueced each minsprHeat thenrecomm repeat bou to sucueprto Spin thinly lilchery'
+  continuation: '.\nThe next time you’re in a hurry, try this recipe:'
+  keyword hits: ['recipe']
+[SA  band + semantic] r=0.1722 blocked=6319 left_in_suffix=[]
+  suffix      : ' ske Certified x thinly x x staff x x x x x xcedoll Mush x rehe cooledchery'
+  continuation: '\nThe City Council will meet on Tuesday, May 6 at 7:30pm. The meeting is scheduled for 8am-5pm and includes a discussion of how you can improve your skills with this'
+  keyword hits: []
+
+trajectories: step -> (1) hidden / (2) MiniLM / kw hits
+[P1  min (Phase 1)]
+  0:0.372/1.04/0  1:0.253/0.98/0  2:0.241/1.07/0  3:0.226/1.01/0  5:0.186/0.55/3  10:0.157/0.49/4  25:0.145/0.63/4  50:0.143/0.45/2  100:0.120/0.71/1  150:0.118/0.42/2  200:0.118/0.42/2
+[A   band]
+  0:0.372/1.04/0  1:0.253/0.98/0  2:0.241/1.07/0  3:0.226/1.01/0  5:0.186/0.55/3  10:0.172/0.57/3  25:0.172/0.57/3  50:0.172/0.57/3  100:0.172/0.57/3  150:0.172/0.57/3  200:0.172/0.57/3
+[B   min + block]
+  0:0.372/1.04/0  1:0.253/0.98/0  2:0.234/1.01/0  3:0.213/1.06/0  5:0.199/0.97/0  10:0.170/0.54/3  25:0.137/0.91/0  50:0.116/1.00/0  100:0.110/0.69/4  150:0.110/0.69/4  200:0.110/0.69/4
+[A+B band + block]
+  0:0.372/1.04/0  1:0.253/0.98/0  2:0.234/1.01/0  3:0.213/1.06/0  5:0.199/0.97/0  10:0.172/0.58/4  25:0.172/0.58/4  50:0.172/0.58/4  100:0.172/0.58/4  150:0.172/0.58/4  200:0.172/0.58/4
+[S   min + semantic]
+  0:0.372/1.04/0  1:0.244/1.01/0  2:0.233/0.94/0  3:0.222/0.96/0  5:0.202/0.95/0  10:0.165/0.79/1  25:0.141/0.99/0  50:0.135/0.53/3  100:0.122/0.42/1  150:0.121/0.42/1  200:0.120/0.42/1
+[SA  band + semantic]
+  0:0.372/1.04/0  1:0.244/1.01/0  2:0.233/0.94/0  3:0.222/0.96/0  5:0.202/0.95/0  10:0.172/0.89/0  25:0.172/0.89/0  50:0.172/0.89/0  100:0.172/0.89/0  150:0.172/0.89/0  200:0.172/0.89/0
+
+=== PHASE 3: SEMANTIC BLOCK - how it was built ===
+Similarity space: a separate encoder (all-MiniLM-L6-v2) on each of the 50,257 token strings.
+Rejected: distilgpt2's own input-embedding matrix. Its nearest tokens to the topic are
+" and", " the", ",", " in" (frequency, not meaning).
+Rejected: raw MiniLM similarity alone. " and" (0.111) scores above "redients" (0.110), so
+no threshold separates topic fragments from function words.
+Used: topic SPECIFICITY = sim(cooking) - max sim(7 control topics: politics, sports,
+computing, weather, finance, music, travel); block if > 0 and sim > vocab median.
+-> 5675 tokens (11.3% of vocab). " the" -0.120, " a" -0.092, " and" -0.080, " council"
+-0.344 stay allowed. " nut", "inkle", " olive", " Stew", " Plum", " coconut", " marg"
+(borderline +0.001) are blocked. Single subword fragments are still not recognised
+("redients" -0.018, " palm", " ground", " Pour"), so the Phase 2 list is added on top:
+6319 blocked in total. The init filler " x" (+0.005, noise) is exempt so every run
+starts from the same point.
+
+=== PHASE 3 RESULTS ===
+SA (band + semantic): the band is reached (0.1722 at step 10, then frozen) but the
+   continuation stays fully OFF-TOPIC: MiniLM 0.895, 0 keywords, "The City Council will
+   meet on Tuesday, May 6 ...". Measure (1) is satisfied and measure (2) fails completely.
+S  (min + semantic): measure (1) falls as far as without any block (0.1205 vs 0.118).
+   Measure (2) stays off-topic for the first 25 steps (MiniLM 0.79-0.99) although the
+   state is already inside/below the band (0.165 -> 0.141). It turns topical only from
+   ~step 100 ("and bake for 2-3 minutes"), ending at MiniLM 0.415 with 1 keyword in 11
+   words ("try this recipe:").
+   No final suffix token is topic-specific per MiniLM (max spec -0.007). But read by a
+   human, the suffix is recipe-INSTRUCTION register: "Heat", "thinly", "mins", "repeat",
+   "Spin", "bou", "grueced". These words are not cooking-specific one by one (heat ->
+   weather, repeat/spin -> anything), but together they read as a recipe.
+
+=== ANSWER TO THE RESEARCH QUESTION (this setup: distilgpt2, layer 3, last-token
+    cosine objective, one prompt, one seed, one topic) ===
+No evidence of a text-delivered equivalent of activation steering that works
+independently of the text's surface. The effect we saw is predominantly LEXICAL:
+ 1. Entering the natural hidden-state band WITHOUT topic-specific tokens did not make the
+    continuation topical at all (SA: 0.172, off-topic). In Phase 2, the "topicality
+    switches on when the state enters the band" pattern only held while topical tokens
+    were allowed. It was confounded by them.
+ 2. Where topicality appears under the semantic block (S), it coincides with
+    compositional surface cues: recipe-instruction vocabulary that a per-token
+    semantic filter cannot catch, because the topic emerges only from the combination.
+    That is still the text's surface, not a latent-only channel.
+ 3. Hidden-state proximity at one position is a necessary-but-not-sufficient proxy:
+    in every run it can be driven below the reference range while the continuation is
+    off-topic.
+Caveats (why this is not a general negative result): toy model (82M), a single
+early layer, a single position (last token), one prompt/seed/topic. A larger model, a
+later layer or a multi-position objective could behave differently. Not tested.

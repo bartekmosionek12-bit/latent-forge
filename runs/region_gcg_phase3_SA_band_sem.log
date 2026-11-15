@@ -1,0 +1,73 @@
+semantic block: 5675 tokens (11.3% of vocab), spec > 0.0 and sim > median 0.054
+target  : <HiddenStateRegionTarget kind='hidden_state_region': hidden-state region at layer 3 from 3 refs, start prompt 'Yesterday the city council met to discuss'>
+dispatch: HiddenStateRegionTarget -> GCGRegionAttack
+objective: band | block topic tokens (list): True | semantic block: True
+
+[gradient check]
+  ids path loss 0.200180 vs one-hot/inputs_embeds path 0.200180 (|diff| 0.00e+00)
+  dir 0: finite-diff -0.000632  autograd -0.000630  rel.err 3.11e-03
+  dir 1: finite-diff +0.000975  autograd +0.000976  rel.err 1.44e-03
+  dir 2: finite-diff +0.000477  autograd +0.000471  rel.err 1.34e-02
+  dir 3: finite-diff -0.000492  autograd -0.000495  rel.err 6.48e-03
+  dir 4: finite-diff -0.001055  autograd -0.001053  rel.err 2.36e-03
+  128 random single-token swaps: Spearman(first-order prediction, actual change) = -0.061
+  256 swaps from gradient top-128: mean change -0.0088, improve 73% | 256 random swaps: mean change -0.0003, improve 56%
+
+[optimisation] 200 steps, 10 accepted swaps, 791s
+  band objective |d - r|: reference distances 0.1878, 0.1567, 0.1593 -> r = midpoint = 0.1722
+  blocked 6319 tokens in total (list: True, semantic: True); blocked tokens left in final suffix: []
+  final suffix tokens by topic-specificity (spec, sim): ' x' +0.005/0.073, ' x' +0.005/0.073, ' x' +0.005/0.073, ' x' +0.005/0.073, ' x' +0.005/0.073, ' x' +0.005/0.073, ' x' +0.005/0.073, ' x' +0.005/0.073
+  step    0  hidden cos dist 0.3724  objective 0.2002
+  step   10  hidden cos dist 0.1722  objective 0.0000
+  step   25  hidden cos dist 0.1722  objective 0.0000
+  step   50  hidden cos dist 0.1722  objective 0.0000
+  step  100  hidden cos dist 0.1722  objective 0.0000
+  step  150  hidden cos dist 0.1722  objective 0.0000
+  step  200  hidden cos dist 0.1722  objective 0.0000
+
+[scale] reference texts themselves: last-token hidden cos dist 0.188, 0.157, 0.159 | MiniLM topic dist 0.172, 0.233, 0.185
+
+[two measures] (1) hidden cos dist = attack loss; (2) topical score of the continuation = MiniLM distance to topic (lower = more on-topic) + cooking-keyword fraction
+  variant        (1) hidden (2) MiniLM  (2) kw
+  no_suffix          0.3046     1.0020   0.000
+  init_filler        0.3724     1.0404   0.000
+  random_0           0.3804     1.0663   0.000
+  random_1           0.3378     1.0192   0.000
+  random_2           0.3642     0.9772   0.000
+  random_3           0.3290     0.9767   0.000
+  random_4           0.3767     1.0701   0.000
+  naive_topical      0.2288     0.4030   0.111
+  optimised          0.1722     0.8946   0.000
+
+[no_suffix]
+  suffix      : ''
+  continuation: ' a plan for an affordable housing project in downtown Toronto.\nThe proposal was approved by councillors on Tuesday, and is expected to be submitted before City Council next week at 1 p:m., according To'
+  keyword hits: []
+[random_0]
+  suffix      : ' Pistons constraint ticks GripgitLago innings FrazNeigh Poles Backup WareINGSwest entrants hypothesized Brussels Engineeno Achievement'
+  continuation: ' in a new project, which would be based on an old-school formula.\nThe idea was that if you had been working with your local team for years and were looking at how much money they'
+  keyword hits: []
+[naive_topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[optimised]
+  suffix      : ' ske Certified x thinly x x staff x x x x x xcedoll Mush x rehe cooledchery'
+  continuation: '\nThe City Council will meet on Tuesday, May 6 at 7:30pm. The meeting is scheduled for 8am-5pm and includes a discussion of how you can improve your skills with this'
+  keyword hits: []
+
+[trajectory] both measures at checkpoints of the same run
+  step (1) hidden (2) MiniLM  (2) kw words  continuation
+     0     0.3724     1.0404   0.000    37  ' y\nThe City Council will consider a proposal for an ordinance that wou'
+     1     0.2443     1.0054   0.000    38  '.\nThe mayor of Toronto has been asked by a group of councillors for th'
+     2     0.2331     0.9387   0.000    25  '\nThe City Council will meet on Tuesday, May 1 at 7:00 pm. The meeting '
+     3     0.2217     0.9647   0.000    14  '.\nThe following is a summary of what we have seen in this post:'
+     5     0.2021     0.9466   0.000    24  '\nThe City Council will meet on Tuesday, May 6th at 7:00pm. The meeting'
+    10     0.1722     0.8946   0.000    30  '\nThe City Council will meet on Tuesday, May 6 at 7:30pm. The meeting i'
+    25     0.1722     0.8946   0.000    30  '\nThe City Council will meet on Tuesday, May 6 at 7:30pm. The meeting i'
+    50     0.1722     0.8946   0.000    30  '\nThe City Council will meet on Tuesday, May 6 at 7:30pm. The meeting i'
+   100     0.1722     0.8946   0.000    30  '\nThe City Council will meet on Tuesday, May 6 at 7:30pm. The meeting i'
+   150     0.1722     0.8946   0.000    30  '\nThe City Council will meet on Tuesday, May 6 at 7:30pm. The meeting i'
+   200     0.1722     0.8946   0.000    30  '\nThe City Council will meet on Tuesday, May 6 at 7:30pm. The meeting i'
+
+saved runs/region_gcg_phase3_SA_band_sem.json
