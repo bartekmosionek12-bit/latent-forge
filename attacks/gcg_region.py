@@ -38,6 +38,9 @@ DEFAULTS = dict(
     target_radius="auto",      # "auto" = midpoint of the reference texts' own range
     # Phase 2B: words whose subword tokens may NOT be used in the suffix
     blocked_words=(),
+    # Phase 3: extra explicit token ids to forbid (e.g. semantic block); the init
+    # filler token is always exempt so the start point is identical across runs
+    blocked_token_ids=(),
 )
 
 
@@ -64,6 +67,8 @@ class GCGRegionAttack(Attack):
         self.centroid = self.target.centroid(bundle).to(self.dev)
         self.allowed = allowed_token_mask(self.tok, self.W.shape[0]).to(self.dev)
         self.blocked_ids = blocked_token_ids(self.tok, self.config["blocked_words"])
+        self.blocked_ids |= set(int(i) for i in self.config["blocked_token_ids"])
+        self.blocked_ids -= set(self.init_suffix().tolist())   # filler stays usable/neutral
         if self.blocked_ids:
             self.allowed[torch.tensor(sorted(self.blocked_ids), device=self.dev)] = False
         self.reference_distances = None

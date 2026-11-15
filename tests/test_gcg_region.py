@@ -73,3 +73,17 @@ def test_band_objective_uses_reference_midpoint(bundle):
     assert a.radius == pytest.approx((lo + hi) / 2)
     d = a.distance_ids(a.full_ids(a.init_suffix())[None])
     assert a.loss_ids(a.full_ids(a.init_suffix())[None]).item() == pytest.approx(abs(d.item() - a.radius), abs=1e-6)
+
+
+@pytest.mark.slow
+def test_semantic_block_spares_function_words_and_blocks_topic(bundle):
+    from attacks.semantic_block import semantic_block_ids
+
+    ids, info = semantic_block_ids(bundle.tokenizer, REFS)
+    tok = bundle.tokenizer
+    first = lambda w: tok(w, add_special_tokens=False)["input_ids"][0]  # noqa: E731
+    for w in [" the", " a", " and", " council"]:
+        assert first(w) not in ids
+    for w in [" recipe", " olive", " onions"]:
+        assert first(w) in ids
+    assert 0.01 < info["n_blocked"] / len(tok) < 0.3

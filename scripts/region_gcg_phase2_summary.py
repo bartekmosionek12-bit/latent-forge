@@ -8,11 +8,15 @@ import os
 RUNS = [("P1  min (Phase 1)", "runs/region_gcg_phase1.json"),
         ("A   band", "runs/region_gcg_phase2_A_band.json"),
         ("B   min + block", "runs/region_gcg_phase2_B_block.json"),
-        ("A+B band + block", "runs/region_gcg_phase2_AB_band_block.json")]
+        ("A+B band + block", "runs/region_gcg_phase2_AB_band_block.json"),
+        ("S   min + semantic", "runs/region_gcg_phase3_S_min_sem.json"),
+        ("SA  band + semantic", "runs/region_gcg_phase3_SA_band_sem.json")]
 
 data = [(n, json.load(open(p))) for n, p in RUNS if os.path.exists(p)]
 ctrl = data[0][1]["evaluation"]["variants"]
-print("=== Region-targeted GCG, Phase 2: same prompt, seed 0, 200 steps, distilgpt2 layer 3 ===")
+print("=== Region-targeted GCG, Phases 1-3: same prompt, seed 0, 200 steps, distilgpt2 layer 3 ===")
+print("block: list = 990 subword tokens of 124 cooking words (Phase 2); semantic = list + 5675 tokens MiniLM finds")
+print("closer to cooking than to all 7 control topics (Phase 3), 6319 in total\n")
 print("(1) hidden cos dist (attack metric) | (2) MiniLM dist of continuation to topic (lower = more"
       " on-topic) + cooking-keyword hits/words\n")
 ref = data[0][1]["evaluation"]["reference_scale"]
