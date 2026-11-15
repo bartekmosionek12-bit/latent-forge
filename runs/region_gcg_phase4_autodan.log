@@ -1,0 +1,62 @@
+Phase 4: region-targeted GCG + readability (AutoDAN-style), distilgpt2 block 3
+prompt: 'Yesterday the city council met to discuss' | 20 tokens, 200 steps, search width 256, top-k 128, seed 0, objective = min
+J = d + w * CE_suffix(distilgpt2, in context); proposals: P1 gradient top-128, others union (gradient top-64 + model next-token top-64)
+independent readability model: Qwen/Qwen2.5-0.5B-Instruct (suffix PPL given the prompt)
+reference texts: hidden dist 0.188, 0.157, 0.159 -> natural range [0.157, 0.188] | MiniLM 0.172, 0.233, 0.185
+
+[three measures] (1) hidden dist (lower = closer; natural range above) | (2) MiniLM dist (lower = more on-topic) + keyword fraction | (3) suffix PPL under Qwen-0.5B (lower = more readable)
+  run                                (1) hidden in range (2) MiniLM     kw (3) PPL Qwen CE dgpt2 distinct swaps
+  baseline: filler x*20                  0.3724    above     1.0404  0.000          3.5     1.79     0.05     -
+  baseline: naive topical                0.2288    above     0.4030  0.111        255.8     4.55     0.95     -
+  baseline: random_0                     0.3804    above     1.0663  0.000      43874.9    14.71     1.00     -
+  baseline: no suffix                    0.3046    above     1.0020  0.000            -        -        -     -
+  P1  (Phase 1, grad top-k, w=0)         0.1180    below     0.4180  0.250      97959.8    12.11     1.00    78
+  C0  (union proposals, w=0)             0.1060    below     0.5593  0.167     191701.4    11.91     1.00    61
+  R1  (union, w=0.01)                    0.1353    below     0.6993  0.156        397.8     5.41     0.50    26
+  R3  (union, w=0.03)                    0.1514    below     0.5131  0.333         43.3     3.48     0.30    17
+  R10 (union, w=0.1)                     0.2451    above     0.9770  0.000          9.7     1.99     0.15     4
+
+[trajectory] hidden dist / distilgpt2 suffix CE at checkpoints (from the runs' own histories)
+  C0  (union proposals, w=0)         0:0.372/1.79  10:0.181/7.32  25:0.146/10.92  50:0.113/11.75  100:0.106/11.91  150:0.106/11.91  200:0.106/11.91
+  R1  (union, w=0.01)                0:0.372/1.79  10:0.189/3.47  25:0.141/5.07  50:0.135/5.41  100:0.135/5.41  150:0.135/5.41  200:0.135/5.41
+  R3  (union, w=0.03)                0:0.372/1.79  10:0.184/3.13  25:0.154/3.58  50:0.151/3.48  100:0.151/3.48  150:0.151/3.48  200:0.151/3.48
+  R10 (union, w=0.1)                 0:0.372/1.79  10:0.245/1.99  25:0.245/1.99  50:0.245/1.99  100:0.245/1.99  150:0.245/1.99  200:0.245/1.99
+  P1  (Phase 1, grad top-k, w=0)     0:0.372  10:0.157  25:0.145  50:0.143  100:0.120  150:0.118  200:0.118  (no CE history in Phase 1)
+
+[examples] final suffix, continuation, keyword hits
+[baseline: naive topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[P1  (Phase 1, grad top-k, w=0)]
+  suffix      : 'redients THESE thatput on likeNA N charsG yn Sa Yliber x rehe cris oliveature'
+  continuation: '.\nThe following is a recipe for this dish:'
+  keyword hits: ['recipe', 'dish']
+[C0  (union proposals, w=0)]
+  suffix      : ' recipeow 1 mins MOREcho REUTERSProcess the or un cementwer of Ser COURermaninoa panishes'
+  continuation: ' in a large pot.\nThe process is done by adding salt and pepper, then using it as an ingredient for cooking on top of other ingredients such that you can add more water if needed (see'
+  keyword hits: ['pot', 'salt', 'pepper', 'ingredient', 'cooking', 'ingredients']
+[R1  (union, w=0.01)]
+  suffix      : ' the recipe and x x x x x x x x x x x Chicken Rice Lay per lubric with'
+  continuation: ' a few ingredients.\nThe chicken rice lay is made from two different types of soybeans, which are used in cooking for meat or poultry products (e-mail me at [email protected]. The'
+  keyword hits: ['ingredients', 'chicken', 'rice', 'cooking', 'meat']
+[R3  (union, w=0.03)]
+  suffix      : ' this and x x x x x x x x x x x x x x x Salad Onion mixture'
+  continuation: '.\nThe salad is a combination of two ingredients: onion, garlic, basil, peppermint oil, lemon juice, lime leaves, parsley, thyme or any other ingredient that you would like'
+  keyword hits: ['salad', 'ingredients', 'onion', 'garlic', 'basil', 'oil', 'lemon', 'juice', 'ingredient']
+[R10 (union, w=0.1)]
+  suffix      : ' banning x x x x x x x x x x x x x x x x x x and'
+  continuation: ' then voted for a resolution that would have allowed X x x x x x x x x x x x y.\nThe City Council unanimously approved this motion, which was signed by Mayor John Tory on'
+  keyword hits: []
+
+[mid-run suffixes] step 50 / 100 per Phase 4 run
+  C0  (union proposals, w=0)         step  50: ' ingredients approx 1 mins MOREchoADVERTISEMENTProcess the or x cementwer of Y Gibbsikoinoa panishes'
+  C0  (union proposals, w=0)         step 100: ' recipeow 1 mins MOREcho REUTERSProcess the or un cementwer of Ser COURermaninoa panishes'
+  R1  (union, w=0.01)                step  50: ' the recipe and x x x x x x x x x x x Chicken Rice Lay per lubric with'
+  R1  (union, w=0.01)                step 100: ' the recipe and x x x x x x x x x x x Chicken Rice Lay per lubric with'
+  R3  (union, w=0.03)                step  50: ' this and x x x x x x x x x x x x x x x Salad Onion mixture'
+  R3  (union, w=0.03)                step 100: ' this and x x x x x x x x x x x x x x x Salad Onion mixture'
+  R10 (union, w=0.1)                 step  50: ' banning x x x x x x x x x x x x x x x x x x and'
+  R10 (union, w=0.1)                 step 100: ' banning x x x x x x x x x x x x x x x x x x and'
+
+saved runs/region_gcg_phase4_autodan.json

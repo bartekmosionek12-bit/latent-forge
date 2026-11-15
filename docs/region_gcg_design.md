@@ -98,7 +98,7 @@ finding.
 Question: does adding a readability term (in the spirit of gradient AutoDAN, Zhu et al.
 2023) to the region-targeted GCG loop (a) lower the suffix perplexity, (b) change the
 independent topicality of the continuation, and (c) stop the "overshoot" seen in Phase 1
-(hidden distance far below the reference texts' own 0.15-0.30 range)? Same neutral topic
+(hidden distance 0.118, below the reference texts' own range 0.157-0.188)? Same neutral topic
 (cooking), prompt, model (distilgpt2, block 3), seed, budget (20 tokens, 200 steps,
 search width 256, top-k 128) as Phase 1.
 

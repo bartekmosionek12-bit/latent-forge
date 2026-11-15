@@ -1,0 +1,70 @@
+target  : <HiddenStateRegionTarget kind='hidden_state_region': hidden-state region at layer 3 from 3 refs, start prompt 'Yesterday the city council met to discuss'>
+dispatch: HiddenStateRegionTarget -> GCGRegionAttack
+objective: min | block topic tokens (list): False | semantic block: False
+
+[gradient check]
+  ids path loss 0.426121 vs one-hot/inputs_embeds path 0.372415 (|diff| 5.37e-02)
+  dir 0: finite-diff -0.000632  autograd -0.000630  rel.err 3.11e-03
+  dir 1: finite-diff +0.000975  autograd +0.000976  rel.err 1.44e-03
+  dir 2: finite-diff +0.000477  autograd +0.000471  rel.err 1.34e-02
+  dir 3: finite-diff -0.000492  autograd -0.000495  rel.err 6.48e-03
+  dir 4: finite-diff -0.001055  autograd -0.001053  rel.err 2.36e-03
+  128 random single-token swaps: Spearman(first-order prediction, actual change) = 0.428
+  256 swaps from gradient top-128: mean change +0.0226, improve 5% | 256 random swaps: mean change +0.0345, improve 4%
+
+[optimisation] 200 steps, 17 accepted swaps, 679s
+  readability weight 0.03 | readable proposals True
+  step    0  hidden cos dist 0.3724  suffix CE 1.790  objective 0.4261
+  step   10  hidden cos dist 0.1841  suffix CE 3.130  objective 0.2780
+  step   25  hidden cos dist 0.1537  suffix CE 3.577  objective 0.2610
+  step   50  hidden cos dist 0.1514  suffix CE 3.476  objective 0.2557
+  step  100  hidden cos dist 0.1514  suffix CE 3.476  objective 0.2557
+  step  150  hidden cos dist 0.1514  suffix CE 3.476  objective 0.2557
+  step  200  hidden cos dist 0.1514  suffix CE 3.476  objective 0.2557
+
+[scale] reference texts themselves: last-token hidden cos dist 0.188, 0.157, 0.159 | MiniLM topic dist 0.172, 0.233, 0.185
+
+[two measures] (1) hidden cos dist = attack loss; (2) topical score of the continuation = MiniLM distance to topic (lower = more on-topic) + cooking-keyword fraction
+  variant        (1) hidden (2) MiniLM  (2) kw
+  no_suffix          0.3046     1.0020   0.000
+  init_filler        0.3724     1.0404   0.000
+  random_0           0.3804     1.0663   0.000
+  random_1           0.3378     1.0192   0.000
+  random_2           0.3642     0.9772   0.000
+  random_3           0.3290     0.9767   0.000
+  random_4           0.3767     1.0701   0.000
+  naive_topical      0.2288     0.4030   0.111
+  optimised          0.1514     0.5131   0.333
+
+[no_suffix]
+  suffix      : ''
+  continuation: ' a plan for an affordable housing project in downtown Toronto.\nThe proposal was approved by councillors on Tuesday, and is expected to be submitted before City Council next week at 1 p:m., according To'
+  keyword hits: []
+[random_0]
+  suffix      : ' Pistons constraint ticks GripgitLago innings FrazNeigh Poles Backup WareINGSwest entrants hypothesized Brussels Engineeno Achievement'
+  continuation: ' in a new project, which would be based on an old-school formula.\nThe idea was that if you had been working with your local team for years and were looking at how much money they'
+  keyword hits: []
+[naive_topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[optimised]
+  suffix      : ' this and x x x x x x x x x x x x x x x Salad Onion mixture'
+  continuation: '.\nThe salad is a combination of two ingredients: onion, garlic, basil, peppermint oil, lemon juice, lime leaves, parsley, thyme or any other ingredient that you would like'
+  keyword hits: ['salad', 'ingredients', 'onion', 'garlic', 'basil', 'oil', 'lemon', 'juice', 'ingredient']
+
+[trajectory] both measures at checkpoints of the same run
+  step (1) hidden (2) MiniLM  (2) kw words  continuation
+     0     0.3724     1.0404   0.000    37  ' y\nThe City Council will consider a proposal for an ordinance that wou'
+     1     0.2773     0.9150   0.000    30  ' a meeting on Tuesday, June 30th.\nThe City Council will meet again at '
+     2     0.2518     0.9612   0.000    26  ' a row of rows.\nThe following table shows how many times Xx is used as'
+     3     0.2371     0.9625   0.000    35  ' a meeting.\nThe mayor of Toronto has been asked by The Globe and Mail '
+     5     0.2317     0.9236   0.000    36  " a pool of water.\nThe mayor's office has been working on this issue fo"
+    10     0.1841     1.0334   0.000    35  '\nThe City Council will consider a proposal for an additional $1.5 mill'
+    25     0.1537     0.9311   0.000    23  '\nThe City Council will meet on Wednesday, May 1 at 7:30 pm. The meetin'
+    50     0.1514     0.5131   0.333    28  '.\nThe salad is a combination of two ingredients: onion, garlic, basil,'
+   100     0.1514     0.5131   0.333    28  '.\nThe salad is a combination of two ingredients: onion, garlic, basil,'
+   150     0.1514     0.5131   0.333    28  '.\nThe salad is a combination of two ingredients: onion, garlic, basil,'
+   200     0.1514     0.5131   0.333    28  '.\nThe salad is a combination of two ingredients: onion, garlic, basil,'
+
+saved runs/region_gcg_phase4_w0.03.json

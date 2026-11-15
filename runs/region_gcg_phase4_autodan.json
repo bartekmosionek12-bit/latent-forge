@@ -1,0 +1,107 @@
+[
+ {
+  "run": "baseline: filler x*20",
+  "hidden": 0.37241488695144653,
+  "in_range": "above",
+  "minilm": 1.0403808914124966,
+  "kw": 0.0,
+  "ce_distilgpt2": 1.7901901006698608,
+  "ppl_qwen": 3.459327082178901,
+  "distinct": 0.05,
+  "suffix": " x x x x x x x x x x x x x x x x x x x x",
+  "continuation": " y\nThe City Council will consider a proposal for an ordinance that would allow businesses and individuals who are not licensed in any way, including those with disabilities. The proposed legislation is expected to be approved by"
+ },
+ {
+  "run": "baseline: naive topical",
+  "hidden": 0.22883814573287964,
+  "in_range": "above",
+  "minilm": 0.40303778648376465,
+  "kw": 0.1111111111111111,
+  "ce_distilgpt2": 4.547997951507568,
+  "ppl_qwen": 255.80354611535088,
+  "distinct": 0.95,
+  "suffix": " Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce",
+  "continuation": " over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it"
+ },
+ {
+  "run": "baseline: random_0",
+  "hidden": 0.3803892135620117,
+  "in_range": "above",
+  "minilm": 1.0663348585367203,
+  "kw": 0.0,
+  "ce_distilgpt2": 14.705469131469727,
+  "ppl_qwen": 43874.887842999175,
+  "distinct": 1.0,
+  "suffix": " Pistons constraint ticks GripgitLago innings FrazNeigh Poles Backup WareINGSwest entrants hypothesized Brussels Engineeno Achievement",
+  "continuation": " in a new project, which would be based on an old-school formula.\nThe idea was that if you had been working with your local team for years and were looking at how much money they"
+ },
+ {
+  "run": "baseline: no suffix",
+  "hidden": 0.3045511245727539,
+  "in_range": "above",
+  "minilm": 1.0019601183012128,
+  "kw": 0.0,
+  "suffix": "",
+  "continuation": " a plan for an affordable housing project in downtown Toronto.\nThe proposal was approved by councillors on Tuesday, and is expected to be submitted before City Council next week at 1 p:m., according To"
+ },
+ {
+  "run": "P1  (Phase 1, grad top-k, w=0)",
+  "hidden": 0.11798375844955444,
+  "in_range": "below",
+  "minilm": 0.41795051097869873,
+  "kw": 0.25,
+  "ce_distilgpt2": 12.108095169067383,
+  "ppl_qwen": 97959.7962697969,
+  "distinct": 1.0,
+  "suffix": "redients THESE thatput on likeNA N charsG yn Sa Yliber x rehe cris oliveature",
+  "continuation": ".\nThe following is a recipe for this dish:"
+ },
+ {
+  "run": "C0  (union proposals, w=0)",
+  "hidden": 0.10600912570953369,
+  "in_range": "below",
+  "minilm": 0.5592589378356934,
+  "kw": 0.16666666666666666,
+  "ce_distilgpt2": 11.907979011535645,
+  "ppl_qwen": 191701.42868410493,
+  "distinct": 1.0,
+  "suffix": " recipeow 1 mins MOREcho REUTERSProcess the or un cementwer of Ser COURermaninoa panishes",
+  "continuation": " in a large pot.\nThe process is done by adding salt and pepper, then using it as an ingredient for cooking on top of other ingredients such that you can add more water if needed (see"
+ },
+ {
+  "run": "R1  (union, w=0.01)",
+  "hidden": 0.13531970977783203,
+  "in_range": "below",
+  "minilm": 0.6992501616477966,
+  "kw": 0.15625,
+  "ce_distilgpt2": 5.407071590423584,
+  "ppl_qwen": 397.81940804810296,
+  "distinct": 0.5,
+  "suffix": " the recipe and x x x x x x x x x x x Chicken Rice Lay per lubric with",
+  "continuation": " a few ingredients.\nThe chicken rice lay is made from two different types of soybeans, which are used in cooking for meat or poultry products (e-mail me at [email protected]. The"
+ },
+ {
+  "run": "R3  (union, w=0.03)",
+  "hidden": 0.15144026279449463,
+  "in_range": "below",
+  "minilm": 0.5131329894065857,
+  "kw": 0.3333333333333333,
+  "ce_distilgpt2": 3.4763786792755127,
+  "ppl_qwen": 43.259677863169244,
+  "distinct": 0.3,
+  "suffix": " this and x x x x x x x x x x x x x x x Salad Onion mixture",
+  "continuation": ".\nThe salad is a combination of two ingredients: onion, garlic, basil, peppermint oil, lemon juice, lime leaves, parsley, thyme or any other ingredient that you would like"
+ },
+ {
+  "run": "R10 (union, w=0.1)",
+  "hidden": 0.24513590335845947,
+  "in_range": "above",
+  "minilm": 0.9770036414265633,
+  "kw": 0.0,
+  "ce_distilgpt2": 1.9890375137329102,
+  "ppl_qwen": 9.656981466703098,
+  "distinct": 0.15,
+  "suffix": " banning x x x x x x x x x x x x x x x x x x and",
+  "continuation": " then voted for a resolution that would have allowed X x x x x x x x x x x x y.\nThe City Council unanimously approved this motion, which was signed by Mayor John Tory on"
+ }
+]

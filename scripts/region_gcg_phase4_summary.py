@@ -85,7 +85,7 @@ for name, r in runs[1:]:
     pts = [0, 10, 25, 50, 100, 150, 200]
     print(f"  {name:34s} " + "  ".join(f"{s}:{x['distance_history'][s]:.3f}/{x['ce_history'][s]:.2f}" for s in pts))
 x = p1["extra"]
-print(f"  {runs[0][0]:34s} " + "  ".join(f"{s}:{x['distance_history'][s]:.3f}" for s in [0, 10, 25, 50, 100, 150, 200])
+print(f"  {runs[0][0]:34s} " + "  ".join(f"{s}:{p1['loss_history'][s]:.3f}" for s in [0, 10, 25, 50, 100, 150, 200])
       + "  (no CE history in Phase 1)")
 
 print("\n[examples] final suffix, continuation, keyword hits")
