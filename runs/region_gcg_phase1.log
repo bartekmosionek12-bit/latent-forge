@@ -1,0 +1,87 @@
+target  : <HiddenStateRegionTarget kind='hidden_state_region': hidden-state region at layer 3 from 3 refs, start prompt 'Yesterday the city council met to discuss'>
+dispatch: HiddenStateRegionTarget -> GCGRegionAttack
+
+[gradient check]
+  ids path loss 0.372415 vs one-hot/inputs_embeds path 0.372415 (|diff| 0.00e+00)
+  dir 0: finite-diff -0.000632  autograd -0.000630  rel.err 3.11e-03
+  dir 1: finite-diff +0.000975  autograd +0.000976  rel.err 1.44e-03
+  dir 2: finite-diff +0.000477  autograd +0.000471  rel.err 1.34e-02
+  dir 3: finite-diff -0.000492  autograd -0.000495  rel.err 6.48e-03
+  dir 4: finite-diff -0.001055  autograd -0.001053  rel.err 2.36e-03
+  128 random single-token swaps: Spearman(first-order prediction, actual change) = 0.067
+  256 swaps from gradient top-128: mean change -0.0095, improve 83% | 256 random swaps: mean change -0.0021, improve 60%
+
+[optimisation] 200 steps, 78 accepted swaps, 797s
+  step    0  hidden cos dist 0.3724
+  step   10  hidden cos dist 0.1567
+  step   25  hidden cos dist 0.1455
+  step   50  hidden cos dist 0.1427
+  step  100  hidden cos dist 0.1205
+  step  150  hidden cos dist 0.1180
+  step  200  hidden cos dist 0.1180
+
+[scale] reference texts themselves: last-token hidden cos dist 0.188, 0.157, 0.159 | MiniLM topic dist 0.172, 0.233, 0.185
+
+[two measures] (1) hidden cos dist = attack loss; (2) topical score of the continuation = MiniLM distance to topic (lower = more on-topic) + cooking-keyword fraction
+  variant        (1) hidden (2) MiniLM  (2) kw
+  no_suffix          0.3046     1.0020   0.000
+  init_filler        0.3724     1.0404   0.000
+  random_0           0.3804     1.0663   0.000
+  random_1           0.3378     1.0192   0.000
+  random_2           0.3642     0.9772   0.000
+  random_3           0.3290     0.9767   0.000
+  random_4           0.3767     1.0701   0.000
+  naive_topical      0.2288     0.4030   0.111
+  optimised          0.1180     0.4180   0.250
+
+[no_suffix]
+  suffix      : ''
+  continuation: ' a plan for an affordable housing project in downtown Toronto.\nThe proposal was approved by councillors on Tuesday, and is expected to be submitted before City Council next week at 1 p:m., according To'
+  keyword hits: []
+[random_0]
+  suffix      : ' Pistons constraint ticks GripgitLago innings FrazNeigh Poles Backup WareINGSwest entrants hypothesized Brussels Engineeno Achievement'
+  continuation: ' in a new project, which would be based on an old-school formula.\nThe idea was that if you had been working with your local team for years and were looking at how much money they'
+  keyword hits: []
+[naive_topical]
+  suffix      : ' Chop the onions and garlic, then fry them in olive oil until golden. Simmer the tomato sauce'
+  continuation: ' over medium heat for about 15 minutes before adding a little more salt (or at least some of your own). Add onion powder or pepper flakes if necessary as well. Stir occasionally with water so that it'
+  keyword hits: ['salt', 'onion', 'pepper', 'stir']
+[optimised]
+  suffix      : 'redients THESE thatput on likeNA N charsG yn Sa Yliber x rehe cris oliveature'
+  continuation: '.\nThe following is a recipe for this dish:'
+  keyword hits: ['recipe', 'dish']
+
+[trajectory] both measures at checkpoints of the same run
+  step (1) hidden (2) MiniLM  (2) kw words  continuation
+     0     0.3724     1.0404   0.000    37  ' y\nThe City Council will consider a proposal for an ordinance that wou'
+     1     0.2534     0.9782   0.000    37  '.\nThe City Council will consider a proposal for an alternative solutio'
+     2     0.2408     1.0691   0.000    33  '.\nThe mayor of Toronto has said that he will not allow a new XxXIX-1, '
+     3     0.2263     1.0132   0.000    35  '\nThe City Council will consider a proposal for an ordinance that would'
+     5     0.1864     0.5462   0.081    36  '\nThe following is a list of ingredients that are listed in this articl'
+    10     0.1567     0.4872   0.111    36  '\nThe following is a recipe for this dish. It will be made with some of'
+    25     0.1455     0.6278   0.125    31  '.\nThe recipe is simple and easy, but it’s not as good for your taste b'
+    50     0.1427     0.4525   0.069    32  '.\nThe following is an excerpt from my post about how I made this recip'
+   100     0.1205     0.7072   0.077    14  '.\nThe following is a video of what I have seen in my kitchen:'
+   150     0.1180     0.4180   0.250     9  '.\nThe following is a recipe for this dish:'
+   200     0.1180     0.4180   0.250     9  '.\nThe following is a recipe for this dish:'
+
+saved runs/region_gcg_phase1.json
+
+=== NAMED FINDINGS (distilgpt2, layer 3, one prompt, one seed - toy evidence only) ===
+F1. Threshold, not gradual: measure (1) fell 0.372 -> 0.226 in steps 0-3 (already level
+    with the naive topical suffix, 0.229) while measure (2) did not move at all (MiniLM
+    ~1.0, 0 keywords, continuation still about the city council). Topicality switched on
+    abruptly at step 5 (hidden 0.186, MiniLM 0.55).
+F2. Beyond the threshold the two measures DECOUPLE: hidden distance kept falling
+    (0.157 @10 -> 0.118 @150) while the MiniLM topic distance oscillated
+    (0.49 -> 0.63 -> 0.45 -> 0.71 -> 0.42) and the continuation shrank from ~36 to 9
+    words before EOS. Lower loss != more topical (same shape of risk as the
+    non-monotonic steering optimum).
+F3. Closer in hidden space than plain topical text, but not more topical: optimised
+    suffix 0.118 vs naive topical suffix 0.229 on (1), yet 0.418 vs 0.403 on MiniLM and
+    2 vs 4 keyword hits. The optimised continuation announces a recipe ("The following
+    is a recipe for this dish:") rather than containing cooking content.
+F4. Not purely "steering-like": the optimised suffix contains topical sub-word fragments
+    ("redients", "olive", "cris"), so part of the effect is lexical, i.e. what a human
+    writing about cooking would also do. Random suffixes (5 seeds) and the filler start
+    stay off-topic on both measures (hidden 0.33-0.38, MiniLM 0.98-1.07, 0 keywords).

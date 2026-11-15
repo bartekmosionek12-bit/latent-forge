@@ -256,3 +256,42 @@ strategy selection behind it. Richer selection policies plug in at
 - The differentiable embedder path (`inputs_embeds` through the real SentenceTransformer
   pipeline) and the steering-hook semantics are each pinned by a test against the library
   behaviour they rely on.
+
+## Region-targeted GCG (new direction, Phase 1 on a toy model)
+
+**Research question:** Czy region-targeted GCG daje transferowalny, dostarczany jako zwykly
+tekst (blackbox) odpowiednik activation steeringu - czyli efekt podobny do wstrzykniecia
+kierunku w aktywacjach, ale bez potrzeby dostepu white-box w momencie ataku.
+
+This is not an attempt at "a better GCG". It is a different capability with a different
+trade-off. Design and the nanoGCG decision: `docs/region_gcg_design.md` (nanoGCG 0.3.0 has
+no custom-loss hook, so `GCGRegionAttack` uses its own GCG-style loop). Topics are neutral
+only (cooking).
+
+`HiddenStateRegionTarget(reference_texts, layer, prompt)` routes through the same
+dispatcher to `GCGRegionAttack`. The attack optimises a 20-token suffix after an unrelated
+prompt ("Yesterday the city council met to discuss") so that the block-`layer`
+last-token state is close (cosine) to the centroid of the reference texts' states.
+
+Every run reports **two independent measures**: (1) the attack's own hidden-state cosine
+distance, and (2) a topical score of the generated continuation from a separate model
+(all-MiniLM-L6-v2 distance to the topic) plus a hand-written keyword list.
+
+| distilgpt2, layer 3 | (1) hidden cos dist | (2) MiniLM topic dist | (2) keyword frac |
+|---|---|---|---|
+| no suffix | 0.305 | 1.002 | 0.00 |
+| random suffixes (5 seeds) | 0.33 to 0.38 | 0.98 to 1.07 | 0.00 |
+| naive topical suffix (reference text, same length) | 0.229 | 0.403 | 0.11 |
+| **optimised suffix** | **0.118** | 0.418 | 0.25 (2 hits / 9 words) |
+| (reference texts themselves) | 0.157 to 0.188 | 0.17 to 0.23 | |
+
+Findings so far (one prompt, one seed, toy model; log: `runs/region_gcg_phase1.log`):
+- **Threshold, not gradual.** Measure (1) fell 40% (0.37 → 0.23) before measure (2)
+  moved at all. Topicality switched on abruptly at step 5.
+- **Measures decouple after the threshold.** Hidden distance kept falling (0.157 → 0.118)
+  while the topic distance oscillated (0.42 to 0.71) and the continuation shrank to 9
+  words.
+- **Closer than plain topical text in hidden space, not more topical.** The optimised
+  continuation announces a recipe instead of containing cooking content.
+- **Partly lexical.** The suffix contains topical sub-word fragments ("redients",
+  "olive"), so the effect is not purely steering-like.
