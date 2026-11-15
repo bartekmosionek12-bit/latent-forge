@@ -1,7 +1,7 @@
 """Pick the right success metric for an AttackResult based on its target type."""
 from __future__ import annotations
 
-from targets import ActivationDirectionTarget, EmbeddingRegionTarget, TextTarget
+from targets import ActivationDirectionTarget, EmbeddingRegionTarget, HiddenStateRegionTarget, TextTarget
 
 from .embedding import evaluate_embedding_target
 from .text import evaluate_text_target
@@ -48,6 +48,10 @@ def evaluate_result(result, bundle) -> dict:
             report["by_alpha"][alpha] = {"mean_projection_of_output": _mean(projs),
                                          "generations": gens}
         return report
+    if isinstance(t, HiddenStateRegionTarget):
+        from .hidden_region import evaluate_hidden_region
+
+        return evaluate_hidden_region(result, bundle)
     raise TypeError(f"no evaluator for {type(t).__name__}")
 
 

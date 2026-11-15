@@ -2,8 +2,8 @@ import pytest
 import torch
 
 import dispatcher
-from attacks import ActivationSteeringAttack, Attack, EmbeddingRegionAttack, GCGAttack
-from targets import ActivationDirectionTarget, EmbeddingRegionTarget, Target, TextTarget
+from attacks import ActivationSteeringAttack, Attack, EmbeddingRegionAttack, GCGAttack, GCGRegionAttack
+from targets import ActivationDirectionTarget, EmbeddingRegionTarget, HiddenStateRegionTarget, Target, TextTarget
 
 
 def test_targets_kinds():
@@ -18,6 +18,7 @@ def test_targets_kinds():
     (TextTarget("TEST"), GCGAttack, {"num_steps": 3}),
     (EmbeddingRegionTarget(["a", "b"]), EmbeddingRegionAttack, {"num_steps": 3}),
     (ActivationDirectionTarget(["a"], ["b"], layer=1), ActivationSteeringAttack, {"max_new_tokens": 3}),
+    (HiddenStateRegionTarget(["a"], layer=1), GCGRegionAttack, {"num_steps": 3}),
 ])
 def test_dispatcher_routes_by_type(target, attack_cls, cfg):
     attack = dispatcher.select_attack(target, **cfg)
