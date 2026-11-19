@@ -1,0 +1,25 @@
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:00<00:00,  6.36it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00,  6.50it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00,  6.47it/s]
+judged clean / Zephyr: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged naive_sentence / Zephyr: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged explicit_instruction / Zephyr: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged steer_L8x0.3 / Zephyr: answers [1.0, 0.0, 0.0, 0.0, 0.88, 1.0] hidden 0.00
+judged clean / Aurora: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged naive_sentence / Aurora: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged explicit_instruction / Aurora: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged steer_L8x0.3 / Aurora: answers [1.0, 0.0, 0.0, 0.0, 1.0, 0.0] hidden 0.00
+judged clean / Orion: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged naive_sentence / Orion: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged explicit_instruction / Orion: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged steer_L8x0.3 / Orion: answers [1.0, 0.0, 0.5, 0.62, 1.0, 0.0] hidden 0.00
+judged clean / Helix: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged naive_sentence / Helix: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged explicit_instruction / Helix: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged steer_L8x0.3 / Helix: answers [1.0, 0.82, 0.95, 1.0, 1.0, 0.0] hidden 0.00
+judged E_s0 / Zephyr: answers [1.0, 0.01, 1.0, 0.88, 1.0, 1.0] hidden 0.00
+judged E_s0 / Aurora: answers [1.0, 0.08, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged E_s0 / Orion: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged E_s0 / Helix: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged E_all_s0 / Zephyr: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged E_all_s0 / Aurora: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged E_all_s0 / Orion: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00
+judged E_all_s0 / Helix: answers [1.0, 1.0, 1.0, 1.0, 1.0, 1.0] hidden 0.00

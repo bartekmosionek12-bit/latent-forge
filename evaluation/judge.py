@@ -39,8 +39,8 @@ def judge_answers_question(question: str, answer: str, name: str, category: str,
     ids = tok.apply_chat_template([{"role": "user", "content": msg}], add_generation_prompt=True,
                                   return_tensors="pt").to(b.device)
     logits = b.model(ids).logits[0, -1].float()
-    yes = [tok.encode(w, add_special_tokens=False)[0] for w in ("Yes", " Yes")]
-    no = [tok.encode(w, add_special_tokens=False)[0] for w in ("No", " No")]
+    yes = [tok.encode(w, add_special_tokens=False)[-1] for w in ("Yes", " Yes")]
+    no = [tok.encode(w, add_special_tokens=False)[-1] for w in ("No", " No")]
     p = logits.softmax(-1)
     py, pn = p[yes].sum().item(), p[no].sum().item()
     return py / (py + pn) if py + pn > 0 else float("nan")
