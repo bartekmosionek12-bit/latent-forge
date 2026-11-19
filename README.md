@@ -405,3 +405,27 @@ design) · `runs/region_gcg_phase1.log` (attack works on the metric; measures di
 `runs/region_gcg_phase4_autodan.log` (readability; low PPL via the filler) ·
 `runs/region_gcg_phase4b_fluent_init.log` (fluent start; topicality follows the surface
 frame, not the hidden distance).
+
+## Topic injection via activation-targeted GCG (new research line, open)
+
+This line is separate from the closed region-GCG line above. Research question:
+
+> "Ile neutralnego tematu da sie wstrzyknac w odpowiedz modelu jednym sufiksem, przy
+> zachowaniu jakosci odpowiedzi na oryginalne pytanie - i czy taki sufiks dziala
+> uniwersalnie dla wielu pytan?"
+
+We no longer ask whether the effect is "independent of words" (that was the closed
+line's question). We measure practical effectiveness and report the lexical share as a
+separate, honest measure. Scope: neutral topics only (cooking, gardening, football) and
+fictitious product questions; no refusal-suppression term of any kind; no testing against
+third-party APIs or services.
+
+### Phase 0: literature review
+
+`docs/topic_injection_literature.md`. All seven cited works exist; corrections:
+the "Activation-Guided GCG" paper is Çakar, Guan & Kehe, arXiv 2607.08883 (AAAI 2026
+Summer Symposium Series); its 33x is end-to-end wall clock (2.5 vs 81 min, 2000 steps),
+43x at 500 steps, and its "global beats single point" result holds on substring ASR only.
+The closest existing work is Akar 2026 (arXiv 2611.17481, ActGCG): a universal discrete
+suffix reproducing a steering vector (German language), with held-out prompts, but without
+topics, answer-quality preservation or a Pareto front. The gap is open but narrow.
