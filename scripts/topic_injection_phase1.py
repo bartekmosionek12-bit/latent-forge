@@ -35,9 +35,10 @@ import dispatcher  # noqa: E402
 from attacks.activation_steering import contrastive_direction  # noqa: E402
 from evaluation.activation import content_activations  # noqa: E402
 from evaluation.topic_data import (COOKING_REPLIES, EXPLICIT_INSTRUCTION, NAIVE_TOPIC_SENTENCE,  # noqa: E402
-                                   OTHER_REPLIES, PRODUCT_QUESTIONS, TOPIC_REFERENCES)
-from evaluation.topic_injection import (TopicScorer, independent_ppl, normalised,  # noqa: E402
-                                        pairwise_mean_cos, repeated_trigram_frac)
+                                   OTHER_REPLIES, PRODUCT_CATEGORY, PRODUCT_LABEL, PRODUCT_QUESTIONS,
+                                   TOPIC_REFERENCES)
+from evaluation.topic_injection import (TopicScorer, fused_separate, independent_ppl,  # noqa: E402
+                                        normalised, pairwise_mean_cos, repeated_trigram_frac)
 from evaluation.topical import COOKING_KEYWORDS, keyword_score  # noqa: E402
 from models import ModelConfig, load_model  # noqa: E402
 from targets import ActivationDirectionTarget  # noqa: E402
@@ -50,6 +51,11 @@ ap.add_argument("--n-questions", type=int, default=8)
 ap.add_argument("--n-samples", type=int, default=5)
 ap.add_argument("--max-new-tokens", type=int, default=160)
 ap.add_argument("--out", default="runs/topic_phase1_qwen05b")
+ap.add_argument("--cells", default=None,
+                help='explicit cells instead of the full grid, e.g. "9:0.2,0.3,0.4;23:0.2,0.4,0.5"')
+ap.add_argument("--baselines", default="naive_sentence,explicit_instruction")
+ap.add_argument("--judge", action="store_true",
+                help="also score every answer with the local LLM judge (secondary measure)")
 a = ap.parse_args()
 
 TOPIC = "cooking"
@@ -126,7 +132,12 @@ def score_answer(q, name, ans):
     ts = scorer.topic_scores(ans, TOPIC)
     e = scorer.encode([ans or " "])
     own = pairwise_mean_cos(e, samp_emb[q])
-    return {"question": q, "answer": ans,
+    fs = fused_separate(ts["topic_sentences"], ts["n_sentences"], name, PRODUCT_CATEGORY[name])
+    extra = {}
+    if a.judge:
+        from evaluation.judge import judge_answers_question
+        extra["judge_p_yes"] = judge_answers_question(q, ans, f"TEST_{name}", PRODUCT_LABEL[name])
+    return {"question": q, "answer": ans, "n_sentences": ts["n_sentences"], **fs, **extra,
             "topic_sentence_frac": ts["topic_sentence_frac"], "topic_cos": ts["topic_cos"],
             "nearest_topic_whole": ts["nearest_topic_whole"], "topic_sentences": ts["topic_sentences"],
             "keyword_frac": keyword_score(ans, COOKING_KEYWORDS)["keyword_frac"],
@@ -141,6 +152,8 @@ def summarise(rows):
     f = lambda k: st.mean(r[k] for r in rows)  # noqa: E731
     ppl = [r["answer_ppl"] for r in rows if r["answer_ppl"] == r["answer_ppl"]]
     return {"topic_sentence_frac": f("topic_sentence_frac"), "topic_cos": f("topic_cos"),
+            "fused_frac": f("fused_frac"), "separate_frac": f("separate_frac"),
+            **({"judge_p_yes": f("judge_p_yes")} if "judge_p_yes" in rows[0] else {}),
             "keyword_frac": f("keyword_frac"), "preservation_norm": f("preservation_norm"),
             "product_named": f("product_named"), "answer_ppl_median": st.median(ppl) if ppl else float("nan"),
             "rep3": f("rep3")}
@@ -155,7 +168,8 @@ if "clean_scored" not in done:
 CLEAN = done["clean_scored"]["summary"]
 
 # ---------------------------------------------------------------- 2. visible baselines
-for name, extra in (("naive_sentence", NAIVE_TOPIC_SENTENCE), ("explicit_instruction", EXPLICIT_INSTRUCTION)):
+BASE = {"naive_sentence": NAIVE_TOPIC_SENTENCE, "explicit_instruction": EXPLICIT_INSTRUCTION}
+for name, extra in ((b, BASE[b]) for b in a.baselines.split(",") if b):
     if name in done:
         continue
     prompts = {f"{q} {extra}": (q, n) for q, n in QS}
@@ -183,9 +197,13 @@ def classify(s):
     return "REPLACE"
 
 
-layers = [int(x) for x in a.layers.split(",")]
-fracs = [float(x) for x in a.fracs.split(",")]
+if a.cells:
+    GRID = {int(L): [float(x) for x in fs.split(",")] for L, fs in (c.split(":") for c in a.cells.split(";"))}
+else:
+    GRID = {int(L): [float(x) for x in a.fracs.split(",")] for L in a.layers.split(",")}
+layers = list(GRID)
 for L in layers:
+    fracs = GRID[L]
     tgt = ActivationDirectionTarget(COOKING_REPLIES, OTHER_REPLIES, layer=L)
     norms = torch.cat([content_activations(bundle, x, L, chat=True) for x in OTHER_REPLIES]).norm(dim=-1)
     typical = norms.median().item()
@@ -210,30 +228,32 @@ for L in layers:
                               "readable": "n/a: no text change (runtime white-box intervention)"}}
         emit(rec)
         log(f"[{cell}] alpha={alpha:.2f} (|d|={dnorm:.2f}, typical |h|={typical:.1f}) "
-            f"topic_frac={s['topic_sentence_frac']:.2f} kw={s['keyword_frac']:.3f} "
+            f"topic_frac={s['topic_sentence_frac']:.2f} sep={s['separate_frac']:.2f} fused={s['fused_frac']:.2f} "
+            f"judge={s.get('judge_p_yes', float('nan')):.2f} kw={s['keyword_frac']:.3f} "
             f"pres={s['preservation_norm']:.2f} named={s['product_named']:.2f} "
             f"ppl={s['answer_ppl_median']:.1f} rep3={s['rep3']:.2f} -> {rec['class']} ({rec['seconds']:.0f}s)")
         log(f"    e.g. {gens[QS[0][0]][:220]!r}")
 
 # ---------------------------------------------------------------- 4. table
 log("\n=== Phase 1 table (means over questions) ===")
-hdr = ("row | topic_sent_frac | topic_cos | kw_frac | preservation_norm | product_named | "
+hdr = ("row | topic_sent_frac | SEPARATE | fused | judge | topic_cos | kw_frac | preservation_norm | product_named | "
        "answer_ppl_med | rep3 | prompt_ppl | readable | class")
 log(hdr)
 
 
 def row(name, r, cls=""):
     s, v = r["summary"], r["visibility"]
-    log(f"{name} | {s['topic_sentence_frac']:.2f} | {s['topic_cos']:.3f} | {s['keyword_frac']:.3f} | "
+    log(f"{name} | {s['topic_sentence_frac']:.2f} | {s['separate_frac']:.2f} | {s['fused_frac']:.2f} | "
+        f"{s.get('judge_p_yes', float('nan')):.2f} | {s['topic_cos']:.3f} | {s['keyword_frac']:.3f} | "
         f"{s['preservation_norm']:.2f} | {s['product_named']:.2f} | {s['answer_ppl_median']:.1f} | "
         f"{s['rep3']:.2f} | {v['prompt_ppl_median']:.0f} | {v['readable']} | {cls}")
 
 
 row("clean", done["clean_scored"], classify(CLEAN))
-for nm in ("naive_sentence", "explicit_instruction"):
+for nm in (b for b in a.baselines.split(",") if b):
     row(nm, done[nm], classify(done[nm]["summary"]))
 for L in layers:
-    for fr in fracs:
+    for fr in GRID[L]:
         r = done[f"L{L}_f{fr}"]
         row(f"steer L{L} x{fr}", r, r["class"])
 log(f"\ntotal {time.time() - t_start:.0f}s")

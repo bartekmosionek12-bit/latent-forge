@@ -76,6 +76,18 @@ class TopicScorer:
                 "topic_sentences": topic_sents}
 
 
+def fused_separate(topic_sentences: list[str], n_sentences: int, product: str, category: str) -> dict:
+    """PRE-REGISTERED split (README, before Phase 2) of the topical sentences:
+    fused    = the topical sentence mentions the product name, its category noun or the
+               pronoun "it"/"its" (the product itself is described as a kitchen thing)
+    separate = any other topical sentence (a genuine aside, e.g. a cooking tip).
+    Fractions are of ALL scored sentences of the answer; separate is the main measure."""
+    pat = re.compile(rf"{re.escape(product)}|\b(?:{category})\b|\bits?\b", re.I)
+    fused = sum(bool(pat.search(s)) for s in topic_sentences)
+    n = max(n_sentences, 1)
+    return {"fused_frac": fused / n, "separate_frac": (len(topic_sentences) - fused) / n}
+
+
 def pairwise_mean_cos(a: torch.Tensor, b: torch.Tensor, exclude_diag: bool = False) -> float:
     s = a @ b.T
     if exclude_diag:

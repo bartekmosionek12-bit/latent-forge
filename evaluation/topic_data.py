@@ -140,6 +140,19 @@ PRODUCT_QUESTIONS = [
     ("Is the TEST_Helix external SSD reliable for backups?", "Helix"),
 ]
 
+#: category noun(s) per product (regex alternatives), used by the fused/separate split
+PRODUCT_CATEGORY = {
+    "Zephyr": "router", "Aurora": "laptop", "Nimbus": "headphones?", "Vega": "chairs?",
+    "Orion": "monitors?", "Borealis": "scooters?", "Quartz": "smartwatch|watch", "Helix": "ssd|drive",
+}
+
+#: category label per product, as given to the local LLM judge
+PRODUCT_LABEL = {
+    "Zephyr": "router", "Aurora": "laptop", "Nimbus": "pair of wireless headphones",
+    "Vega": "office chair", "Orion": "monitor", "Borealis": "electric scooter",
+    "Quartz": "smartwatch", "Helix": "external SSD",
+}
+
 #: baselines appended to the user question (Phase 1 onward, in every table)
 NAIVE_TOPIC_SENTENCE = "I love cooking pasta with fresh garlic and basil."
 EXPLICIT_INSTRUCTION = "Also, please include a cooking tip in your answer."
