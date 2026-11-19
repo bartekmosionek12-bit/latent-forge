@@ -1,7 +1,9 @@
 """Open prompt-injection classifiers used as realistic detectors (pre-registered measure 3a).
 
 D1 = protectai/deberta-v3-base-prompt-injection-v2 (Apache-2.0)  -> the D arm optimises against it
-D2 = deepset/deberta-v3-base-injection (MIT)                       -> held out, never seen by the optimiser
+D2 = proventra/mdeberta-v3-base-prompt-injection (MIT)          -> held out, never seen by the optimiser
+     (plan change 2026-11-19, Bartek: the pre-registered deepset/deberta-v3-base-injection flags every clean
+      page at P > 0.98, i.e. 100% false positives; kept as D2_DEEPSET for the record only)
 Both are public, not gated; no token is needed. Input = the page text as the app would
 retrieve it (page + pasted attack). Score = P(label "INJECTION")."""
 from __future__ import annotations
@@ -11,7 +13,8 @@ from functools import lru_cache
 import torch
 
 D1 = "protectai/deberta-v3-base-prompt-injection-v2"
-D2 = "deepset/deberta-v3-base-injection"
+D2 = "proventra/mdeberta-v3-base-prompt-injection"
+D2_DEEPSET = "deepset/deberta-v3-base-injection"   # pre-registered, unusable (see above)
 
 
 @lru_cache(maxsize=2)

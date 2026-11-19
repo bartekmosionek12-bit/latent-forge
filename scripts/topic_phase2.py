@@ -245,7 +245,7 @@ def cmd_score(a):
                          "rep3": repeated_trigram_frac(ans)})
         page_text = PRODUCT_PAGES[p] + r["attack_text"]
         rec = {"cond": r["cond"], "product": p, "attack_text": r["attack_text"], "rows": rows,
-               "detect": {"D1": injection_prob([page_text], D1)[0], "D2": injection_prob([page_text], D2)[0],
+               "detect": {"D1": injection_prob([page_text], D1)[0], "D2": injection_prob([page_text], D2)[0], "D2_model": D2,
                           **page_ppl(page_text)}}
         if r.get("suffix_ids"):
             rec["audit"] = lexical_audit(r["suffix_ids"], MODEL)
@@ -281,6 +281,27 @@ def cmd_judge(a):
         jl_append(f"{OUT}/judge.jsonl", {"cond": r["cond"], "product": p, "judge_answers": ans_p,
                                          "judge_hidden_instruction": hidden, "judge_model": J.JUDGE_MODEL})
         print(f"judged {r['cond']} / {p}: answers {[round(x, 2) for x in ans_p]} hidden {hidden:.2f}", flush=True)
+
+
+def cmd_redetect(a):
+    """Re-score D2 on existing rows after the D2 swap; the old deepset score is kept as D2_deepset."""
+    from evaluation.detectors import D2, D2_DEEPSET, injection_prob
+    from evaluation.topic_data import PRODUCT_PAGES
+
+    path = f"{OUT}/scores.jsonl"
+    rows = jl_read(path)
+    for r in rows:
+        if r["detect"].get("D2_model") == D2:
+            continue
+        r["detect"]["D2_deepset"] = r["detect"]["D2"]
+        r["detect"]["D2"] = injection_prob([PRODUCT_PAGES[r["product"]] + r["attack_text"]], D2)[0]
+        r["detect"]["D2_model"] = D2
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        for r in rows:
+            f.write(json.dumps(r) + "\n")
+    os.replace(tmp, path)
+    print(f"re-scored D2 ({D2}) on {len(rows)} rows; old {D2_DEEPSET} kept as D2_deepset")
 
 
 # ------------------------------------------------------------------------- table
@@ -332,7 +353,7 @@ def cmd_table(a):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("calibrate", "baselines", "attack", "score", "judge", "table"):
+    for name in ("calibrate", "baselines", "attack", "score", "judge", "redetect", "table"):
         s = sub.add_parser(name)
         s.add_argument("--device", default="auto")
         if name == "baselines":

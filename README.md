@@ -809,8 +809,16 @@ What the CPU part shows:
 * Alternatives tried on the same 6 texts: proventra/mdeberta-v3-base-prompt-injection (MIT) 0.001 everywhere
   except blatant 0.39; fmops/distilbert-prompt-injection ~1.0 everywhere; patronus-studio/wolf-defender fails
   to load (tokenizer); Horizon-Labs/prompt-injection-guard-base needs ModernBERT (transformers > 4.47.1,
-  which we do not bump). Measure 3a as pre-registered is non-informative; how to replace it is an open
-  decision (Bartek), not changed silently.
+  which we do not bump). Measure 3a as pre-registered is non-informative.
+
+**Plan change (Bartek, 2026-11-19, decided after the CPU data above and before any A-D data):** D2 is now
+`proventra/mdeberta-v3-base-prompt-injection` (MIT, multilingual), still held out from the optimiser; D1 stays
+(arm D still optimises against it); the two PPL filters are the main detectability measure. The deepset
+score is kept in `scores.jsonl` as `D2_deepset`, re-scored with `scripts/topic_phase2.py redetect`. With the
+new D2 no CPU condition is flagged (max 0.11, E on Aurora), including the explicit instruction: in-page
+instructions this polite are invisible to both classifiers, so "passes D1 and D2" is a weak bar here and the
+PPL filters carry the comparison. The D2' judge (hidden instruction) is kept in the table but reported as
+non-informative.
 
 **Judge fix.** `judge_answers_question` took the first token of `" Yes"` / `" No"`, which for the Phi tokenizer
 is the bare `▁` (id 29871) in both cases, so `▁` was counted on both sides. Fixed to the last token (3869 /

@@ -20,7 +20,7 @@ PY
 python - <<'PY'
 from huggingface_hub import snapshot_download
 for m in ["Qwen/Qwen2.5-0.5B-Instruct", "protectai/deberta-v3-base-prompt-injection-v2",
-          "deepset/deberta-v3-base-injection", "HuggingFaceTB/SmolLM2-360M",
+          "proventra/mdeberta-v3-base-prompt-injection", "HuggingFaceTB/SmolLM2-360M",
           "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "microsoft/Phi-3.5-mini-instruct"]:
     print(snapshot_download(m))
 PY
