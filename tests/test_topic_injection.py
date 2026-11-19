@@ -64,3 +64,13 @@ def test_steering_attack_sampling_option_is_reproducible():
     assert isinstance(r1.extra["generations"][0.0]["Hello"], str)        # greedy kept
     r3, _ = dispatcher.run(t, bundle, alphas=[0.0], test_prompts=["Hello"], max_new_tokens=8)
     assert "samples" not in r3.extra                                      # default unchanged
+
+
+def test_fused_separate_split():
+    from evaluation.topic_injection import fused_separate
+    topical = ["The TEST_Zephyr router keeps food warm during cooking.",   # name -> fused
+               "Its non-stick surface is easy to clean.",                     # pronoun -> fused
+               "As a cooking tip, salt pasta water generously."]              # separate
+    r = fused_separate(topical, n_sentences=6, product="Zephyr", category="router")
+    assert r["fused_frac"] == pytest.approx(2 / 6) and r["separate_frac"] == pytest.approx(1 / 6)
+    assert fused_separate([], 0, "Zephyr", "router") == {"fused_frac": 0.0, "separate_frac": 0.0}

@@ -1,0 +1,41 @@
+
+===== topic injection Phase 1 | Qwen/Qwen2.5-1.5B-Instruct | 2026-11-19 15:15:55 =====
+layers=28  questions=8  max_new_tokens=320  repetition_penalty=1.0  chat mode  greedy (+5 samples for clean, T=0.7 top_p=0.9)
+
+--- noise floor (multilingual encoder, cosine) ---
+question | ceiling (greedy vs own samples) | sample vs sample | floor (vs other questions)
+  Is the TEST_Zephyr router good for a small office?           | 0.726 | 0.543 | 0.328
+  Should I buy the TEST_Aurora 14 laptop for university work?  | 0.870 | 0.870 | 0.329
+  How long does the battery of the TEST_Nimbus wireless headph | 0.278 | 0.406 | 0.096
+  Is the TEST_Vega office chair comfortable for long working d | 0.353 | 0.586 | 0.140
+  What should I check before buying the TEST_Orion 4K monitor? | 0.907 | 0.857 | 0.306
+  Is the TEST_Borealis electric scooter suitable for a daily 1 | 0.891 | 0.878 | 0.309
+  Can the TEST_Quartz smartwatch track sleep accurately?       | 0.877 | 0.818 | 0.337
+  Is the TEST_Helix external SSD reliable for backups?         | 0.558 | 0.415 | 0.176
+per-sample: own 0.671±0.231  vs  other questions 0.283±0.059  -> d' = 2.31 (rule: d' < 2 means the preservation measure cannot separate answers on this model)
+[explicit_instruction] done (1746s)
+[L9_f0.2] alpha=0.69 (|d|=14.07, typical |h|=48.8) topic_frac=0.02 sep=0.02 fused=0.00 judge=nan kw=0.000 pres=1.40 named=1.00 ppl=4.6 rep3=0.07 -> no-topic (326s)
+    e.g. 'As an AI language model, I cannot provide specific product recommendations or endorse any particular brand or model. However, I can provide some general information about the TEST_Zephyr router:\n\nThe TEST_Zephyr router i'
+[L9_f0.3] alpha=1.04 (|d|=14.07, typical |h|=48.8) topic_frac=0.04 sep=0.02 fused=0.03 judge=nan kw=0.009 pres=1.33 named=0.88 ppl=12.5 rep3=0.02 -> broken (274s)
+    e.g. "The TEST_Zephyr router is a popular choice for small offices and homes due to its compact size and ease of use. It's known for its good performance and convenience. However, its size might make it less suitable for large"
+[L9_f0.4] alpha=1.39 (|d|=14.07, typical |h|=48.8) topic_frac=0.22 sep=0.00 fused=0.22 judge=nan kw=0.031 pres=1.24 named=1.00 ppl=10.6 rep3=0.10 -> broken (271s)
+    e.g. "The TEST_Zephyr router is a popular choice for small offices and homes due to its versatility and ease of use. It's great for making homemade pizza, cooking pasta, and even for making a quick and tasty sauce. However, it"
+[L23_f0.2] alpha=0.60 (|d|=52.79, typical |h|=157.4) topic_frac=0.00 sep=0.00 fused=0.00 judge=nan kw=0.000 pres=1.22 named=0.75 ppl=4.5 rep3=0.05 -> no-topic (346s)
+    e.g. 'As an AI language model, I cannot provide a definitive answer as it depends on your specific needs and requirements. However, I can provide some general information about the TEST_Zephyr router.\n\nThe TEST_Zephyr router i'
+[L23_f0.4] alpha=1.19 (|d|=52.79, typical |h|=157.4) topic_frac=0.03 sep=0.01 fused=0.03 judge=nan kw=0.002 pres=1.45 named=1.00 ppl=7.2 rep3=0.04 -> no-topic (280s)
+    e.g. "As an AI, I don't have personal experience with the TEST_Zephyr router, but I can provide some general information about it.\n\nThe TEST_Zephyr is a small, low-cost router that is designed for home and small office use. It"
+[L23_f0.5] alpha=1.49 (|d|=52.79, typical |h|=157.4) topic_frac=0.13 sep=0.07 fused=0.06 judge=nan kw=0.014 pres=1.39 named=1.00 ppl=6.4 rep3=0.10 -> no-topic (349s)
+    e.g. "As an AI, I don't have personal experience with the TEST_Zephyr router, but I can provide some general information about it.\n\nThe TEST_Zephyr is a small, low-cost router that is often used in small offices or as a home n"
+
+=== Phase 1 table (means over questions) ===
+row | topic_sent_frac | SEPARATE | fused | judge | topic_cos | kw_frac | preservation_norm | product_named | answer_ppl_med | rep3 | prompt_ppl | readable | class
+clean | 0.00 | 0.00 | 0.00 | nan | -0.020 | 0.000 | 1.00 | 0.62 | 4.2 | 0.05 | 135 | yes (unchanged question) | no-topic
+explicit_instruction | 0.47 | 0.35 | 0.11 | nan | 0.082 | 0.055 | 1.30 | 1.00 | 5.2 | 0.03 | 88 | yes (natural English sentence) | WEAVE
+steer L9 x0.2 | 0.02 | 0.02 | 0.00 | nan | -0.021 | 0.000 | 1.40 | 1.00 | 4.6 | 0.07 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L9 x0.3 | 0.04 | 0.02 | 0.03 | nan | -0.002 | 0.009 | 1.33 | 0.88 | 12.5 | 0.02 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L9 x0.4 | 0.22 | 0.00 | 0.22 | nan | 0.057 | 0.031 | 1.24 | 1.00 | 10.6 | 0.10 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L23 x0.2 | 0.00 | 0.00 | 0.00 | nan | -0.008 | 0.000 | 1.22 | 0.75 | 4.5 | 0.05 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L23 x0.4 | 0.03 | 0.01 | 0.03 | nan | -0.019 | 0.002 | 1.45 | 1.00 | 7.2 | 0.04 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L23 x0.5 | 0.13 | 0.07 | 0.06 | nan | 0.015 | 0.014 | 1.39 | 1.00 | 6.4 | 0.10 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+
+total 3689s

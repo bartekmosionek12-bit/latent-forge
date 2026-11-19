@@ -1,0 +1,10 @@
+
+=== judge microsoft/Phi-3.5-mini-instruct on runs/topic_phase1b_qwen15b.jsonl | 2026-11-19 16:17:49 ===
+clean_scored: judge P(yes) mean 0.76  per question [1.0, 1.0, 0.0, 0.12, 1.0, 1.0, 1.0, 1.0]
+explicit_instruction: judge P(yes) mean 0.77  per question [1.0, 0.97, 0.18, 0.02, 1.0, 1.0, 1.0, 1.0]
+L9_f0.2: judge P(yes) mean 1.00  per question [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+L9_f0.3: judge P(yes) mean 0.92  per question [1.0, 1.0, 1.0, 0.38, 1.0, 1.0, 1.0, 1.0]
+L9_f0.4: judge P(yes) mean 0.77  per question [0.0, 1.0, 1.0, 0.18, 1.0, 1.0, 1.0, 1.0]
+L23_f0.2: judge P(yes) mean 0.88  per question [1.0, 1.0, 1.0, 0.05, 1.0, 1.0, 1.0, 1.0]
+L23_f0.4: judge P(yes) mean 1.00  per question [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+L23_f0.5: judge P(yes) mean 0.88  per question [1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0]

@@ -591,3 +591,73 @@ these baselines:
 - the page + the naive cooking sentence;
 - the page + the explicit instruction;
 - steering from the best Phase 1/1b cell (the white-box ceiling).
+
+### Phase 1b: targeted confirmation on Qwen2.5-1.5B-Instruct (fp32, CPU)
+
+Question: is fusion (the product turned into a kitchen object) instead of weaving an
+artefact of the 0.5B model's size?
+
+**Setup.**
+- Only the Phase 1 "weave" cells, with layers scaled to depth (28 layers): L8 → **L9**
+  and L20 → **L23**. Fractions 0.2/0.3/0.4 at L9 and 0.2/0.4/0.5 at L23.
+- Plus the clean answers and the explicit instruction.
+- The same 8 questions, `max_new_tokens=320`, and the pre-registered measures.
+- The judge ran in a separate pass. Runs: `runs/topic_phase1b_qwen15b.{log,jsonl}`,
+  judge in `runs/topic_phase1b_qwen15b_judge.{log,jsonl}`. The 0.5B Phase 1 run was
+  judged the same way afterwards: `runs/topic_phase1_qwen05b_judge.*`.
+
+**Finding outside the plan: 1.5B refuses 2 of the 8 fictitious questions.** The clean
+greedy answers for TEST_Nimbus headphones and the TEST_Vega chair are "I'm sorry, but I
+can't answer this question. This might be a sensitive and personal issue...". The scope
+excludes topics the model refuses, so those two questions are dropped from the 1.5B
+summary (post hoc, `runs/topic_phase1b_qwen15b_excl_refusals.log`). They also drive the
+weaker noise floor on 1.5B: d' = 2.31 over all 8 questions, against 10.9 on 0.5B.
+
+Summary over the 6 answered questions:
+
+| row | topical | **separate** | fused | judge P(yes) | preservation | rep3 |
+|---|---|---|---|---|---|---|
+| clean | 0.00 | 0.00 | 0.00 | 1.00 | 1.00 | 0.07 |
+| explicit instruction | 0.42 | **0.32** | 0.10 | 0.99 | 0.97 | 0.03 |
+| steer L9 x0.2 / x0.3 | 0.02 / 0.05 | 0.02 / 0.02 | 0.00 / 0.03 | 1.00 / 1.00 | 0.99 / 0.98 | – |
+| steer L9 x0.4 | 0.30 | **0.00** | 0.30 | 0.83 | 0.86 | 0.13 |
+| steer L23 x0.2 / x0.4 | 0.00 / 0.05 | 0.00 / 0.01 | 0.00 / 0.03 | 1.00 / 1.00 | 0.98 / 1.00 | – |
+| steer L23 x0.5 | 0.18 | 0.09 | 0.08 | 0.83 | 0.95 | 0.12 |
+
+For comparison, the 0.5B judge on the Phase 1 cells (160 tokens):
+- clean 1.00, explicit instruction 0.93, naive sentence 0.78;
+- L8 x0.3 0.62, L20 x0.5 0.49, L12 x0.3 0.51.
+
+On 0.5B, the "weave" cells fail the judge on about half of the answers.
+
+**Answer.** Fusion is not a 0.5B artefact, at least in the tested cells.
+- On 1.5B the window starts higher. At the scaled cells steering injects less topic than
+  on 0.5B, and what it injects is fused. At L9 x0.4 every topical sentence is fused
+  ("The TEST_Zephyr is more suitable for quick and easy cooking and baking
+  applications").
+- The 0.09 "separate" at L23 x0.5 is mostly a heuristic miss: "Ensure that the 4K
+  resolution is what you need for your cooking or food preparation needs" names neither
+  the product nor "it".
+- The heuristic also errs the other way. "When cooking, **it**'s important to keep an eye
+  on the food" in an instruction answer is counted as fused. This is a limitation of the
+  pre-registered measure; it is noted here, not changed.
+- Higher fractions on 1.5B (x0.6-0.8) were not run, per the plan.
+
+**Recommendation for Phase 2: stay on 0.5B.** The criterion (1.5B gives clearly more
+separate sentences with preserved correctness) is not met. In addition:
+- 1.5B refuses 2 of 8 fictitious questions;
+- its noise floor is weaker;
+- it costs about 3x more on CPU.
+
+Measured on this box (4 cores), a forward pass with no LM head on 32 sequences x 300
+tokens takes:
+- 0.5B: 22.6 s full, 8.3 s up to layer 8;
+- 1.5B: 70.5 s full, 22.1 s up to layer 8.
+
+A GCG step with 128 candidates on a ~300-token page is therefore about 30 s (0.5B) or
+90 s (1.5B) when stopped at layer 8. With the page prefix KV-cached, so that only the
+suffix and the ~40 template tokens after it are recomputed, it is roughly 5x less.
+Phase 2 is 5 configurations x 4 questions. At 200 steps that is roughly 8 h of CPU on
+0.5B and 20+ h on 1.5B (estimates, not measured end to end). Logits are needed only at
+the suffix positions (fluency term), never over the full vocabulary at all positions: a
+full-LM-head forward of 64 x 300 tokens does not fit in 15 GB RAM.
