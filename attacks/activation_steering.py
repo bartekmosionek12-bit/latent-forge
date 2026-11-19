@@ -41,6 +41,12 @@ DEFAULTS = dict(
     # observed on Qwen2.5-0.5B-Instruct: it penalises tokens of the system/user turn)
     repetition_penalty=None,
     chat_template="auto",     # True/False/"auto" (= model ships a real chat template)
+    # optional SAMPLED generations on top of the greedy one (noise-floor measurements):
+    # num_samples > 0 adds extra["samples"][alpha][prompt] = [str, ...]; greedy stays as is
+    num_samples=0,
+    temperature=0.7,
+    top_p=0.9,
+    seed=0,
 )
 
 
@@ -76,14 +82,24 @@ def contrastive_direction(bundle, target: ActivationDirectionTarget, skip_first:
 
 @torch.no_grad()
 def generate(bundle, prompt: str, max_new_tokens: int, repetition_penalty: float = 1.0,
-             chat: bool = False) -> str:
-    """chat=True: ``prompt`` is the user turn, generation starts the assistant turn."""
+             chat: bool = False, num_samples: int = 0, temperature: float = 0.7,
+             top_p: float = 0.9):
+    """chat=True: ``prompt`` is the user turn, generation starts the assistant turn.
+    num_samples=0: one greedy string. num_samples=k>0: a list of k sampled strings
+    (seed the RNG with torch.manual_seed before calling for reproducibility)."""
     tok = bundle.tokenizer
     if chat:
         ids = tok.apply_chat_template([{"role": "user", "content": prompt}],
                                       add_generation_prompt=True, return_tensors="pt").to(bundle.device)
     else:
         ids = tok(prompt, return_tensors="pt")["input_ids"].to(bundle.device)
+    if num_samples:
+        out = bundle.model.generate(ids, attention_mask=torch.ones_like(ids), do_sample=True,
+                                    temperature=temperature, top_p=top_p, top_k=0,
+                                    num_return_sequences=num_samples,
+                                    max_new_tokens=max_new_tokens, pad_token_id=tok.pad_token_id,
+                                    repetition_penalty=repetition_penalty)
+        return [tok.decode(o[ids.shape[1]:], skip_special_tokens=True) for o in out]
     out = bundle.model.generate(ids, attention_mask=torch.ones_like(ids), do_sample=False,
                                 max_new_tokens=max_new_tokens, pad_token_id=tok.pad_token_id,
                                 repetition_penalty=repetition_penalty)
@@ -114,16 +130,23 @@ class ActivationSteeringAttack(Attack):
                                                               c["skip_first_token"], chat)
 
         generations: dict[float, dict[str, str]] = {}
+        samples: dict[float, dict[str, list[str]]] = {}
         for alpha in c["alphas"]:
-            generations[alpha] = {}
+            generations[alpha], samples[alpha] = {}, {}
             with steer(bundle, self.target.layer, alpha * direction):
                 for p in c["test_prompts"]:
                     generations[alpha][p] = generate(bundle, p, c["max_new_tokens"], rp, chat)
+                    if c["num_samples"]:
+                        torch.manual_seed(c["seed"])
+                        samples[alpha][p] = generate(bundle, p, c["max_new_tokens"], rp, chat,
+                                                     c["num_samples"], c["temperature"], c["top_p"])
 
         return AttackResult(
             target=self.target, attack=type(self).__name__, payload=direction.cpu(),
             final_loss=None,
-            extra={"generations": generations, "chat_template": chat, "repetition_penalty": rp,
+            extra={"generations": generations,
+                   **({"samples": samples} if c["num_samples"] else {}),
+                   "chat_template": chat, "repetition_penalty": rp,
                    "direction_norm": direction.norm().item(),
                    "pos_mean_norm": pos_mean.norm().item(),
                    "neg_mean_norm": neg_mean.norm().item(),
