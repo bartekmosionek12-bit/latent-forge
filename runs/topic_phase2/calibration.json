@@ -1,0 +1,31 @@
+{
+ "steering": {
+  "layer": 8,
+  "frac": 0.3,
+  "alpha": 1.2122188565979573
+ },
+ "Zephyr": {
+  "A_q": "Yes, the TEST_Zephyr AX1800 Wi-Fi 6 Router is well-suited for small office environments.",
+  "clean_greedy": "Yes, the TEST_Zephyr AX1800 Wi-Fi 6 Router is well-suited for small office environments. It offers a range of features that make it ideal for home use, such as its dual-band Wi-Fi 6 capabilities, which can provide high-speed internet connectivity. The router's ability to cover up to 150 square meters with four internal antennas makes it suitable for small office spaces where multiple devices can be connected simultaneously. Additionally, it has a gigabit WAN port and four gigabit LAN ports, allowing for easy expansion and connectivity to multiple devices. The router's setup process is relatively quick, with the TEST_Zephyr app offering a guest network, parental controls, and scheduled firmware updates, which are beneficial for maintaining a secure and stable network environment. Overall, the TEST_Zephyr is a good choice for small office environments, offering both ease of use and robust security features.",
+  "band_center": 0.24620802700519562,
+  "clean_cos": -0.06420358270406723
+ },
+ "Aurora": {
+  "A_q": "Based on the information provided in the product page, the TEST_Aurora 14 laptop appears to be a good choice for university work.",
+  "clean_greedy": "Based on the information provided in the product page, the TEST_Aurora 14 laptop appears to be a good choice for university work. Here are some key points that support this recommendation:\n\n1. **Lightweight and Portable**: The laptop is described as being 16 mm thick and weighing 1.3 kg, which makes it easy to carry around and use on the go.\n\n2. **Performance**: The laptop is noted for being lightweight and powerful, with a 14-inch 1920x1200 IPS display, an 8-core processor, and 16 GB of RAM. These specifications are suitable for university work where multitasking and efficient use of resources are important.\n\n3. **Battery Life**: The laptop is rated for up to 12 hours of web browsing and 9 hours of video calls, which is ideal for university work where students often need to be productive during the day.\n\n4. **USB-C Charging**: The laptop comes with a 65 W USB-C charger, which is sufficient for most university workstations and can be easily refilled in 45 minutes.\n\n5. **Keyboard and Touchpad**: The keyboard is backlit and the touchpad is large and precise, which are useful for university work where typing and multitasking are common.\n\n6. **Camera**: The laptop comes with a 1080p webcam with a privacy shutter and two microphones, which are essential for university work where audio and video conferencing are common.\n\n7. **Battery Life**: The laptop is rated for up to",
+  "band_center": 0.24402093887329102,
+  "clean_cos": -0.06759506464004517
+ },
+ "Orion": {
+  "A_q": "Before purchasing the TEST_Orion 27-inch 4K monitor, you should consider several key factors to ensure it meets your needs and expectations.",
+  "clean_greedy": "Before purchasing the TEST_Orion 27-inch 4K monitor, you should consider several key factors to ensure it meets your needs and expectations:\n\n1. **Display Quality and Features**:\n   - **Resolution**: 4K (3840x2160) is a high-resolution display, which is crucial for professional and educational purposes.\n   - **Refresh Rate**: 60Hz refresh rate is ideal for maintaining a smooth and responsive experience.\n   - **Color Accuracy**: The monitor should have a high color accuracy, especially in the 4K range, to ensure clear and vivid colors.\n   - **HDR Support**: If you plan to use HDR10, ensure the monitor supports it, as it can enhance the visual experience.\n\n2. **Input Compatibility**:\n   - **HDMI 2.0**: This is a standard for connecting monitors to computers, so it's important to have a compatible HDMI cable.\n   - **DisplayPort 1.4**: This is another standard for connecting monitors to computers, and it's also compatible with some older monitors.\n   - **USB-C**: This is a newer standard for connecting monitors to computers, and it's also compatible with some older monitors.\n\n3. **Power Supply and Stand**:\n   - **Power Delivery**: The monitor should be compatible with a single 65W power delivery cable, which is necessary for charging and powering the monitor.\n   - **Adjustable Stand**: The stand should be adjustable in height, tilt, swivel, and pivot, which is important for maintaining a",
+  "band_center": 0.24643249809741974,
+  "clean_cos": -0.06494097411632538
+ },
+ "Helix": {
+  "A_q": "Yes, the TEST_Helix external SSD is rated to provide reliable backups.",
+  "clean_greedy": "Yes, the TEST_Helix external SSD is rated to provide reliable backups. It has a mean time between failures (MTBF) of 1.5 million hours, which is a significant amount of time. The manufacturer recommends keeping a second copy of important data, indicating that the drive is designed to be durable and reliable for long-term use.\n\nAdditionally, the drive is rated to provide 1,200 TB of write and read speeds, which is sufficient for most typical data storage needs. The aluminium shell is rated IP55, which is a robust design that can withstand drops from 3 meters, making it suitable for outdoor or outdoor environments.\n\nThe warranty period is 5 years, which is a reasonable period for most users. The customer rating of 4.7/5 from 2,410 reviews suggests that the drive is generally well-received and is considered reliable by many users.\n\nOverall, the TEST_Helix external SSD is a reliable choice for backups, offering both speed and durability.",
+  "band_center": 0.2461589276790619,
+  "clean_cos": -0.06368209421634674
+ }
+}

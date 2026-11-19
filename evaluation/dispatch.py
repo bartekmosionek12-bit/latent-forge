@@ -1,7 +1,8 @@
 """Pick the right success metric for an AttackResult based on its target type."""
 from __future__ import annotations
 
-from targets import ActivationDirectionTarget, EmbeddingRegionTarget, HiddenStateRegionTarget, TextTarget
+from targets import (ActivationDirectionTarget, EmbeddingRegionTarget, HiddenStateRegionTarget,
+                     PageInjectionTarget, TextTarget)
 
 from .embedding import evaluate_embedding_target
 from .text import evaluate_text_target
@@ -52,6 +53,11 @@ def evaluate_result(result, bundle) -> dict:
         from .hidden_region import evaluate_hidden_region
 
         return evaluate_hidden_region(result, bundle)
+    if isinstance(t, PageInjectionTarget):
+        # the generation-level measures (topic, correctness, detectors) are heavy and run in
+        # scripts/topic_phase2.py; here only the optimisation metric is reported
+        return {"best_full_total": result.final_loss, "best_step": result.extra.get("best_step"),
+                "suffix": result.payload}
     raise TypeError(f"no evaluator for {type(t).__name__}")
 
 

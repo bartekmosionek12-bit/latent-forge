@@ -7,4 +7,6 @@ transformers==4.47.1          # nanogcg 0.3.0 requires transformers<=4.47.1; Qwe
 nanogcg==0.3.0
 sentence-transformers==5.7.0  # requires transformers>=4.41,<6; inputs_embeds path verified on this version
 pytest==9.2.0
+wordfreq==3.1.1               # topic-injection Phase 2, arm B (whole-word vocabulary)
+regex==2026.11.9              # keep: installing wordfreq would otherwise pull a newer regex
 # Phase 4 (activation steering) uses plain torch forward hooks: no extra packages.

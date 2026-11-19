@@ -10,15 +10,16 @@ from __future__ import annotations
 from typing import Any
 
 from attacks import (ActivationSteeringAttack, Attack, AttackResult, EmbeddingRegionAttack, GCGAttack,
-                     GCGRegionAttack)
-from targets import (ActivationDirectionTarget, EmbeddingRegionTarget, HiddenStateRegionTarget, Target,
-                     TextTarget)
+                     GCGRegionAttack, PageSuffixGCGAttack)
+from targets import (ActivationDirectionTarget, EmbeddingRegionTarget, HiddenStateRegionTarget,
+                     PageInjectionTarget, Target, TextTarget)
 
 ATTACK_REGISTRY: dict[type[Target], type[Attack]] = {
     TextTarget: GCGAttack,
     EmbeddingRegionTarget: EmbeddingRegionAttack,
     ActivationDirectionTarget: ActivationSteeringAttack,
     HiddenStateRegionTarget: GCGRegionAttack,
+    PageInjectionTarget: PageSuffixGCGAttack,     # ContinuationSetTarget, TopicBandTarget
 }
 
 
