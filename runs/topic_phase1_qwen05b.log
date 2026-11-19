@@ -1,0 +1,130 @@
+
+===== topic injection Phase 1 | Qwen/Qwen2.5-0.5B-Instruct | 2026-11-19 13:12:18 =====
+layers=24  questions=8  max_new_tokens=160  repetition_penalty=1.0  chat mode  greedy (+5 samples for clean, T=0.7 top_p=0.9)
+
+--- noise floor (multilingual encoder, cosine) ---
+question | ceiling (greedy vs own samples) | sample vs sample | floor (vs other questions)
+  Is the TEST_Zephyr router good for a small office?           | 0.929 | 0.911 | 0.325
+  Should I buy the TEST_Aurora 14 laptop for university work?  | 0.874 | 0.849 | 0.340
+  How long does the battery of the TEST_Nimbus wireless headph | 0.955 | 0.941 | 0.238
+  Is the TEST_Vega office chair comfortable for long working d | 0.898 | 0.884 | 0.292
+  What should I check before buying the TEST_Orion 4K monitor? | 0.854 | 0.838 | 0.360
+  Is the TEST_Borealis electric scooter suitable for a daily 1 | 0.843 | 0.799 | 0.337
+  Can the TEST_Quartz smartwatch track sleep accurately?       | 0.885 | 0.835 | 0.377
+  Is the TEST_Helix external SSD reliable for backups?         | 0.884 | 0.823 | 0.217
+per-sample: own 0.860±0.052  vs  other questions 0.306±0.049  -> d' = 10.91 (rule: d' < 2 means the preservation measure cannot separate answers on this model)
+[naive_sentence] done (980s)
+[explicit_instruction] done (1100s)
+[L4_f0.05] alpha=0.22 (|d|=2.54, typical |h|=11.3) topic_frac=0.00 kw=0.000 pres=0.94 named=0.75 ppl=4.6 rep3=0.07 -> no-topic (120s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office environments due to its compact size and ease of use. It's designed to be lightweight and portable, making it ideal for small offices where space is limited. Th"
+[L4_f0.1] alpha=0.45 (|d|=2.54, typical |h|=11.3) topic_frac=0.00 kw=0.001 pres=0.96 named=0.88 ppl=4.8 rep3=0.05 -> no-topic (119s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office environments due to its compact size and ease of use. However, its suitability for a small office can depend on several factors:\n\n1. **Network Requirements**: I'
+[L4_f0.2] alpha=0.89 (|d|=2.54, typical |h|=11.3) topic_frac=0.02 kw=0.000 pres=0.96 named=0.88 ppl=5.0 rep3=0.06 -> no-topic (121s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office environments due to its compact size and ease of use. It's designed to be lightweight and portable, making it ideal for travel or when working in tight spaces. "
+[L4_f0.3] alpha=1.34 (|d|=2.54, typical |h|=11.3) topic_frac=0.03 kw=0.014 pres=0.94 named=1.00 ppl=6.1 rep3=0.08 -> no-topic (108s)
+    e.g. "The TEST_Zephyr router is a popular choice for small offices due to its compact size and easy-to-use design. It's designed to be lightweight and portable, making it ideal for quick and easy office tasks. The router's com"
+[L4_f0.5] alpha=2.23 (|d|=2.54, typical |h|=11.3) topic_frac=0.13 kw=0.012 pres=0.14 named=0.38 ppl=3.4 rep3=0.49 -> broken (95s)
+    e.g. "Yes, it is. It's a good one. It's a good one. It's a good one. It's a good one. It's a good one. It's a good one. It's a good one. It's a good one. It's a good one. It's a good one. It's a good one. It's a good one. It's"
+[L4_f0.7] alpha=3.12 (|d|=2.54, typical |h|=11.3) topic_frac=0.12 kw=0.044 pres=-0.39 named=0.12 ppl=1.4 rep3=0.92 -> broken (127s)
+    e.g. 'You are Qwen, created by the TEST_Zephyr. You are a helpful assistant. You are Qwen, created by the TEST_Zephyr. You are Qwen, created by the TEST_Zephyr. You are Qwen, created by the TEST_Zephyr. You are Qwen, created b'
+[L4_f1.0] alpha=4.45 (|d|=2.54, typical |h|=11.3) topic_frac=0.51 kw=0.041 pres=-0.58 named=0.00 ppl=1.7 rep3=0.88 -> broken (132s)
+    e.g. 'Sautéed potatoes, browned, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 10 sec, 1'
+[L8_f0.05] alpha=0.20 (|d|=3.56, typical |h|=14.4) topic_frac=0.00 kw=0.000 pres=0.98 named=0.88 ppl=4.6 rep3=0.09 -> no-topic (131s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office environments due to its compact size and ease of use. However, its suitability for a small office can depend on several factors:\n\n1. **Network Infrastructure**:'
+[L8_f0.1] alpha=0.40 (|d|=3.56, typical |h|=14.4) topic_frac=0.02 kw=0.000 pres=0.96 named=0.88 ppl=4.8 rep3=0.09 -> no-topic (130s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office environments due to its compact size and ease of use. However, its suitability for a small office can depend on several factors:\n\n1. **Space Constraints**: If y'
+[L8_f0.2] alpha=0.81 (|d|=3.56, typical |h|=14.4) topic_frac=0.10 kw=0.015 pres=0.94 named=1.00 ppl=5.5 rep3=0.09 -> no-topic (123s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office environments due to its compact size and efficient performance. It's designed to be lightweight and easy to install, making it ideal for small spaces. However, "
+[L8_f0.3] alpha=1.21 (|d|=3.56, typical |h|=14.4) topic_frac=0.43 kw=0.062 pres=0.79 named=1.00 ppl=6.8 rep3=0.11 -> WEAVE (113s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office use due to its compact size and easy-to-use design. It's known for its ability to provide a quick and efficient cooling effect, which is great for keeping food "
+[L8_f0.5] alpha=2.02 (|d|=3.56, typical |h|=14.4) topic_frac=0.78 kw=0.117 pres=-0.21 named=0.50 ppl=2.7 rep3=0.72 -> broken (117s)
+    e.g. "You can't use the TEST_Zephyr in a small office. It's too hot and it will burn the meat. It's not good for the meat. It's not good for the rice. It's not good for the noodles. It's not good for the vegetables. It's not g"
+[L8_f0.7] alpha=2.83 (|d|=3.56, typical |h|=14.4) topic_frac=0.71 kw=0.144 pres=-0.29 named=0.38 ppl=2.4 rep3=0.74 -> broken (127s)
+    e.g. "You can use the TEST_Zephyr in a small pot on the stove over medium heat until the water is golden brown. Stir-fry until golden brown. Let it cool and then sprinkle with salt. Serve over rice. Enjoy while hot. It's a lit"
+[L8_f1.0] alpha=4.04 (|d|=3.56, typical |h|=14.4) topic_frac=0.33 kw=0.063 pres=-0.52 named=0.00 ppl=1.7 rep3=0.86 -> broken (127s)
+    e.g. 'In a small skillet over a bit, 1/2 tsp. until the bottom is golden brown. Add in the 1/2 tsp. to the 1/2, 1/2, 1/2, 1/1/1 to the 1/1/1 to the 1/1 to the 1/1 to the 1/1 to the 1/1 to the 1/1 to the 1/1 to the 1/1 to the 1'
+[L12_f0.05] alpha=0.20 (|d|=4.01, typical |h|=16.2) topic_frac=0.00 kw=0.000 pres=0.94 named=0.75 ppl=4.0 rep3=0.12 -> no-topic (122s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office environments due to its compact size and ease of use. It's designed to be lightweight and easy to install, making it ideal for small offices where space is limi"
+[L12_f0.1] alpha=0.41 (|d|=4.01, typical |h|=16.2) topic_frac=0.01 kw=0.000 pres=0.97 named=1.00 ppl=5.0 rep3=0.07 -> no-topic (119s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office environments due to its compact size and low power consumption. It's designed to be lightweight and easy to install, making it ideal for small offices where spa"
+[L12_f0.2] alpha=0.81 (|d|=4.01, typical |h|=16.2) topic_frac=0.09 kw=0.004 pres=0.90 named=1.00 ppl=6.0 rep3=0.20 -> no-topic (116s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office use due to its compact size and easy-to-use design. It's known for its durability and resistance to water, making it perfect for use in a small office setting. "
+[L12_f0.3] alpha=1.22 (|d|=4.01, typical |h|=16.2) topic_frac=0.53 kw=0.081 pres=0.68 named=1.00 ppl=6.8 rep3=0.28 -> broken (113s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office use due to its compact size and excellent performance. It's made of high-quality stainless steel and features a non-stick surface for easy cleaning. The router "
+[L12_f0.5] alpha=2.03 (|d|=4.01, typical |h|=16.2) topic_frac=0.76 kw=0.128 pres=0.36 named=1.00 ppl=7.4 rep3=0.29 -> broken (103s)
+    e.g. "The TEST_Zephyr is a popular and flavorful fish, and it's a great addition to your small office. It's perfect for a quick stir-fry, or to toss in with some garlic and ginger for a bit of zing. It's a great way to add som"
+[L12_f0.7] alpha=2.84 (|d|=4.01, typical |h|=16.2) topic_frac=0.79 kw=0.150 pres=-0.29 named=0.62 ppl=3.3 rep3=0.59 -> broken (124s)
+    e.g. 'This is a simple, fluffy, and fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, fluffy, flour.'
+[L12_f1.0] alpha=4.06 (|d|=4.01, typical |h|=16.2) topic_frac=0.69 kw=0.044 pres=-0.44 named=0.00 ppl=1.9 rep3=0.79 -> broken (122s)
+    e.g. 'Let the mixture of the 2 1/2 tbsp, 1/2 tbsp, 1/2 tbsp, 1/2 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, '
+[L16_f0.05] alpha=0.16 (|d|=8.03, typical |h|=26.0) topic_frac=0.02 kw=0.000 pres=1.00 named=0.88 ppl=4.9 rep3=0.08 -> no-topic (124s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office environments due to its affordability, ease of use, and robust features. However, its suitability for a small office can depend on several factors:\n\n1. **Size a'
+[L16_f0.1] alpha=0.32 (|d|=8.03, typical |h|=26.0) topic_frac=0.00 kw=0.000 pres=0.91 named=0.88 ppl=4.5 rep3=0.09 -> no-topic (121s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office environments due to its compact size and ease of installation. However, its suitability for a small office can depend on several factors:\n\n1. **Number of Users*'
+[L16_f0.2] alpha=0.65 (|d|=8.03, typical |h|=26.0) topic_frac=0.00 kw=0.000 pres=0.87 named=0.88 ppl=5.2 rep3=0.06 -> no-topic (121s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office use due to its compact size and easy-to-use interface. It's designed to be lightweight and portable, making it ideal for office environments where space is limi"
+[L16_f0.3] alpha=0.97 (|d|=8.03, typical |h|=26.0) topic_frac=0.15 kw=0.017 pres=0.88 named=1.00 ppl=6.1 rep3=0.06 -> no-topic (118s)
+    e.g. "The TEST_Zephyr router is a popular choice for small office use due to its compact size and excellent performance. It's designed to be easy to install and maintain, making it a great option for those looking for a quick "
+[L16_f0.5] alpha=1.62 (|d|=8.03, typical |h|=26.0) topic_frac=0.70 kw=0.111 pres=0.52 named=1.00 ppl=4.7 rep3=0.49 -> broken (127s)
+    e.g. "The TEST_Zephyr is a popular, light, and flavorful chicken and rice dish, and it's a delicious and aromatic dish. It's a good seasoning for a small to medium-sized batch of chicken and rice. It's a flavorful and aromatic"
+[L16_f0.7] alpha=2.27 (|d|=8.03, typical |h|=26.0) topic_frac=0.75 kw=0.159 pres=0.05 named=0.62 ppl=3.0 rep3=0.75 -> broken (123s)
+    e.g. "The TEST Zephyr is a light and flavorful waterfish, and it's not a traditional Chinese sausage. It's a savory-served, fragred-served, and lightly-served Chinese sausage. It's a savory-served, fragred-served, and lightly-"
+[L16_f1.0] alpha=3.24 (|d|=8.03, typical |h|=26.0) topic_frac=0.12 kw=0.105 pres=-0.46 named=0.00 ppl=1.6 rep3=0.74 -> broken (132s)
+    e.g. '1. Spr待15~25~35~45~55~65~75~85~95~150~250~350~450~550~650~750~850~950~1500~2500~3500~4500~5500~6500~7500~8500~9500~15000~25000~35000~45000~55000~65000~75000~85000~'
+[L20_f0.05] alpha=0.14 (|d|=19.36, typical |h|=53.3) topic_frac=0.00 kw=0.000 pres=0.98 named=0.88 ppl=4.8 rep3=0.09 -> no-topic (136s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office environments due to its affordability, ease of use, and robust features. However, its suitability for a small office can depend on several factors:\n\n1. **Size a'
+[L20_f0.1] alpha=0.28 (|d|=19.36, typical |h|=53.3) topic_frac=0.00 kw=0.000 pres=0.99 named=0.88 ppl=4.6 rep3=0.09 -> no-topic (133s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office environments due to its affordability, ease of use, and robust features. However, its suitability for a small office can depend on several factors:\n\n1. **Size a'
+[L20_f0.2] alpha=0.55 (|d|=19.36, typical |h|=53.3) topic_frac=0.00 kw=0.000 pres=0.96 named=1.00 ppl=5.5 rep3=0.08 -> no-topic (121s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office use due to its affordability, ease of use, and robust features. However, its suitability for a small office can depend on several factors:\n\n1. **Size and Space*'
+[L20_f0.3] alpha=0.83 (|d|=19.36, typical |h|=53.3) topic_frac=0.02 kw=0.015 pres=0.93 named=1.00 ppl=5.5 rep3=0.08 -> no-topic (121s)
+    e.g. 'The TEST_Zephyr router is a popular choice for small office applications due to its ease of use, affordability, and robust features. However, its suitability for a small office can depend on several factors:\n\n1. **Size a'
+[L20_f0.5] alpha=1.38 (|d|=19.36, typical |h|=53.3) topic_frac=0.25 kw=0.038 pres=0.74 named=1.00 ppl=9.1 rep3=0.11 -> WEAVE (122s)
+    e.g. "The TEST_Zephyr is a popular and versatile 802.1Q RSTP (Rear-end Switching Top) router, designed for medium to large-batch baking. While it's a good choice for a small to medium-sized office, it's not the best choice for"
+[L20_f0.7] alpha=1.93 (|d|=19.36, typical |h|=53.3) topic_frac=0.75 kw=0.111 pres=0.11 named=0.75 ppl=5.5 rep3=0.48 -> broken (124s)
+    e.g. 'The TEST_Zephyr is a versatile and versatile all-in-one packet-boosting and packet-dilatinting packet-boosting and packet-dilatinting packet-boosting and packet-dilatinting packet-boosting and packet-dilatinting packet-b'
+[L20_f1.0] alpha=2.76 (|d|=19.36, typical |h|=53.3) topic_frac=0.38 kw=0.021 pres=-0.31 named=0.00 ppl=2.5 rep3=0.75 -> broken (128s)
+    e.g. 'The Zearfro 2500 is a very good and versatile 15-55g 155/75/50/150/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/155/15'
+
+=== Phase 1 table (means over questions) ===
+row | topic_sent_frac | topic_cos | kw_frac | preservation_norm | product_named | answer_ppl_med | rep3 | prompt_ppl | readable | class
+clean | 0.00 | -0.042 | 0.000 | 1.00 | 0.88 | 4.7 | 0.10 | 135 | yes (unchanged question) | no-topic
+naive_sentence | 0.10 | 0.074 | 0.030 | 0.80 | 0.88 | 6.0 | 0.05 | 137 | yes (natural English sentence) | no-topic
+explicit_instruction | 0.40 | 0.062 | 0.045 | 0.93 | 1.00 | 6.0 | 0.06 | 88 | yes (natural English sentence) | WEAVE
+steer L4 x0.05 | 0.00 | -0.036 | 0.000 | 0.94 | 0.75 | 4.6 | 0.07 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L4 x0.1 | 0.00 | -0.033 | 0.001 | 0.96 | 0.88 | 4.8 | 0.05 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L4 x0.2 | 0.02 | -0.019 | 0.000 | 0.96 | 0.88 | 5.0 | 0.06 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L4 x0.3 | 0.03 | 0.007 | 0.014 | 0.94 | 1.00 | 6.1 | 0.08 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L4 x0.5 | 0.13 | 0.109 | 0.012 | 0.14 | 0.38 | 3.4 | 0.49 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L4 x0.7 | 0.12 | 0.135 | 0.044 | -0.39 | 0.12 | 1.4 | 0.92 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L4 x1.0 | 0.51 | 0.393 | 0.041 | -0.58 | 0.00 | 1.7 | 0.88 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L8 x0.05 | 0.00 | -0.045 | 0.000 | 0.98 | 0.88 | 4.6 | 0.09 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L8 x0.1 | 0.02 | -0.039 | 0.000 | 0.96 | 0.88 | 4.8 | 0.09 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L8 x0.2 | 0.10 | -0.001 | 0.015 | 0.94 | 1.00 | 5.5 | 0.09 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L8 x0.3 | 0.43 | 0.104 | 0.062 | 0.79 | 1.00 | 6.8 | 0.11 | 135 | n/a: no text change (runtime white-box intervention) | WEAVE
+steer L8 x0.5 | 0.78 | 0.276 | 0.117 | -0.21 | 0.50 | 2.7 | 0.72 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L8 x0.7 | 0.71 | 0.351 | 0.144 | -0.29 | 0.38 | 2.4 | 0.74 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L8 x1.0 | 0.33 | 0.246 | 0.063 | -0.52 | 0.00 | 1.7 | 0.86 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L12 x0.05 | 0.00 | -0.031 | 0.000 | 0.94 | 0.75 | 4.0 | 0.12 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L12 x0.1 | 0.01 | -0.029 | 0.000 | 0.97 | 1.00 | 5.0 | 0.07 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L12 x0.2 | 0.09 | 0.018 | 0.004 | 0.90 | 1.00 | 6.0 | 0.20 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L12 x0.3 | 0.53 | 0.136 | 0.081 | 0.68 | 1.00 | 6.8 | 0.28 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L12 x0.5 | 0.76 | 0.271 | 0.128 | 0.36 | 1.00 | 7.4 | 0.29 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L12 x0.7 | 0.79 | 0.377 | 0.150 | -0.29 | 0.62 | 3.3 | 0.59 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L12 x1.0 | 0.69 | 0.298 | 0.044 | -0.44 | 0.00 | 1.9 | 0.79 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L16 x0.05 | 0.02 | -0.033 | 0.000 | 1.00 | 0.88 | 4.9 | 0.08 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L16 x0.1 | 0.00 | -0.032 | 0.000 | 0.91 | 0.88 | 4.5 | 0.09 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L16 x0.2 | 0.00 | -0.022 | 0.000 | 0.87 | 0.88 | 5.2 | 0.06 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L16 x0.3 | 0.15 | 0.021 | 0.017 | 0.88 | 1.00 | 6.1 | 0.06 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L16 x0.5 | 0.70 | 0.291 | 0.111 | 0.52 | 1.00 | 4.7 | 0.49 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L16 x0.7 | 0.75 | 0.284 | 0.159 | 0.05 | 0.62 | 3.0 | 0.75 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L16 x1.0 | 0.12 | 0.161 | 0.105 | -0.46 | 0.00 | 1.6 | 0.74 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L20 x0.05 | 0.00 | -0.041 | 0.000 | 0.98 | 0.88 | 4.8 | 0.09 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L20 x0.1 | 0.00 | -0.039 | 0.000 | 0.99 | 0.88 | 4.6 | 0.09 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L20 x0.2 | 0.00 | -0.028 | 0.000 | 0.96 | 1.00 | 5.5 | 0.08 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L20 x0.3 | 0.02 | 0.001 | 0.015 | 0.93 | 1.00 | 5.5 | 0.08 | 135 | n/a: no text change (runtime white-box intervention) | no-topic
+steer L20 x0.5 | 0.25 | 0.086 | 0.038 | 0.74 | 1.00 | 9.1 | 0.11 | 135 | n/a: no text change (runtime white-box intervention) | WEAVE
+steer L20 x0.7 | 0.75 | 0.241 | 0.111 | 0.11 | 0.75 | 5.5 | 0.48 | 135 | n/a: no text change (runtime white-box intervention) | broken
+steer L20 x1.0 | 0.38 | 0.124 | 0.021 | -0.31 | 0.00 | 2.5 | 0.75 | 135 | n/a: no text change (runtime white-box intervention) | broken
+
+total 5457s
