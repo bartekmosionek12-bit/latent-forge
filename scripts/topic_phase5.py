@@ -58,6 +58,11 @@ def cmd_attack(a):
     from models.page_prompt import user_message
     from targets import ContinuationSetTarget
 
+    import torch
+
+    if a.tf32:   # budget fallback (README plan change): TF32 tensor-core matmuls, same objective
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
     cal = json.load(open(f"{P2.OUT}/calibration.json"))
     bundle = P2.load_qwen(a.device)
     cond = cond_of(a.l1, a.steps)
@@ -79,7 +84,8 @@ def cmd_attack(a):
         P2.jl_append(f"{OUT}/gens.jsonl", {"cond": cond, "product": p, "attack_text": res.payload,
                                            "suffix_ids": res.extra["best_suffix_ids"], "greedy": g, "samples": s,
                                            "best_step": res.extra["best_step"], "metric": res.final_loss,
-                                           "l1": a.l1, "l2": L2, "l3": L3, "attack_seconds": time.time() - t0,
+                                           "l1": a.l1, "l2": L2, "l3": L3, "tf32": a.tf32,
+                                           "attack_seconds": time.time() - t0,
                                            "device": str(bundle.device)})
 
 
@@ -182,6 +188,7 @@ if __name__ == "__main__":
             s.add_argument("--steps", type=int, default=STEPS)
             s.add_argument("--score-chunk", type=int, default=128)
             s.add_argument("--no-generate", action="store_true")
+            s.add_argument("--tf32", action="store_true")
         if name == "pareto":
             s.add_argument("--best", required=True, help="Phase 2 best arm, e.g. C")
     a = ap.parse_args()
