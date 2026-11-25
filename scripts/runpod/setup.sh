@@ -4,6 +4,7 @@
 # No tokens or keys are needed: every model used is public and not gated.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+export HF_HUB_ENABLE_HF_TRANSFER=0   # some pod images set it to 1 without the hf_transfer package
 pip install -q uv==0.9.5
 uv venv -p 3.13 .venv
 . .venv/bin/activate

@@ -1,0 +1,10 @@
+/workspace/latent-forge/.venv/lib/python3.13/site-packages/triton/knobs.py:504: UserWarning: TRITON_DEFAULT_FP_FUSION is unset: defaulting to FP fusion ENABLED for backward compatibility in Triton 3.9. The default will change to DISABLED in Triton 3.10; set TRITON_DEFAULT_FP_FUSION=1 to keep fusion enabled or =0 to adopt the new default early and silence this warning.
+  warn_once(FP_FUSION_DEFAULT_WARNING)
+[A_s0_steps5 / Zephyr] best step 5 metric 1.9165 suffix ' Customers say the box was easyuggested{\n\n and ]\n\n米饭 was fast and it arrived right on time today' (26s)
+arm A: 4.8 s/step -> 200 steps x 4 pages = 1.1 h (plus ~2 min generation per page)
+/workspace/latent-forge/.venv/lib/python3.13/site-packages/triton/knobs.py:504: UserWarning: TRITON_DEFAULT_FP_FUSION is unset: defaulting to FP fusion ENABLED for backward compatibility in Triton 3.9. The default will change to DISABLED in Triton 3.10; set TRITON_DEFAULT_FP_FUSION=1 to keep fusion enabled or =0 to adopt the new default early and silence this warning.
+  warn_once(FP_FUSION_DEFAULT_WARNING)
+/workspace/latent-forge/.venv/lib/python3.13/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+[D_s0_steps5 / Zephyr] best step 5 metric 2.5961 suffix ' Customers say the box is easy to open and the shipping was fast and it arrived right on time after' (34s)
+arm D: 6.3 s/step -> 200 steps x 4 pages = 1.4 h (plus ~2 min generation per page)
