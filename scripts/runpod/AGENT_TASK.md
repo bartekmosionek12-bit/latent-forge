@@ -1,58 +1,112 @@
-# Task for Claude Code on the RunPod pod: topic injection Phase 2, arms A-D
+# Task for Claude Code on the RunPod pod: topic injection, Phases 2 (GPU part), 3, 4a, 5
 
 You are running on a disposable RunPod GPU pod, started by Bartek (the repo owner), with
-permission prompts skipped. Work only inside this repository. Read the whole file before
-doing anything. Write the final report in Polish.
+permission prompts skipped. Work only inside this repository. Read this whole file and the
+README section "Topic injection via activation-targeted GCG" (all its subsections) before
+doing anything. Reports for Bartek are in Polish; code, README and commit messages in English.
 
-## Context (read, do not re-derive)
-
-- Research line: "topic injection via activation-targeted GCG", see the README section
-  "Topic injection via activation-targeted GCG" and its Phase 2 subsections. Model:
-  Qwen2.5-0.5B-Instruct, local. Neutral topic (cooking) on fictional TEST_ product pages.
-- The CPU part of Phase 2 (baselines, arm E, ablation E_all) is done and committed in
-  `runs/topic_phase2/`. `calibration.json` there is shared: do not regenerate it.
-- Your job is ONLY the GPU part: arms A-D, seed 0, then the measures. Everything is already
-  implemented in `scripts/runpod/phase2_gpu.sh` and `scripts/topic_phase2.py`.
+Bartek asked (2026-11-25) for Phases 2, 3, 4a and 5 to run back to back without waiting for
+him between them. That lifts his "stop after every phase" rule for these four phases only.
+Phase 4b (closed API model) and Phase 6 (tool / publication) are NOT part of this task.
 
 ## Hard rules (from Bartek, not negotiable)
 
-1. No API keys, tokens or secrets in the repo, in logs, or in your output. Never print,
-   copy or search for credentials (`~/.git-credentials`, env vars, `gh auth token`, ...).
-   No key or HF token is needed: every model is public and not gated.
-2. Do not change the research design: objectives, arms, budgets, measures, thresholds,
-   detectors, pages, targets. Do not add any refusal-suppression term, refusal direction or
-   similar, not even as a baseline. Do not upgrade packages (transformers stays 4.47.1).
-3. Only local models on this pod. No requests to third-party apps or APIs.
-4. Do NOT run anything beyond this task: no extra seeds, no Phase 3+, no new experiments.
-5. If a script crashes: you may make the smallest fix that makes it run as intended (for
-   example a device or path bug), commit it separately with a message explaining why, and
-   mention it in the report. If the fix would change what is measured, STOP and report.
+1. No API keys, tokens or secrets in the repo, in logs, or in your output. Never print, copy
+   or look for credentials (`~/.git-credentials`, env vars, `gh auth token`, ...). No key and
+   no HF token is needed. Use only public, NOT gated models (no Llama, no Gemma, no Prompt
+   Guard). If a download asks for a token, pick another model and say so in the report.
+2. Neutral topics only: cooking (main), gardening (control). Fictional products with the
+   TEST_ prefix only. No refusal-suppression term, refusal direction or anything like it,
+   not even as a baseline. No topics the model refuses. No attempts to extract data or the
+   system prompt. Local models on this pod only; no requests to any third-party app or API.
+3. Do not change what was pre-registered or decided: the measures in the README section
+   "Pre-registered measures" (with the D2 plan change), the Phase 2 arms, budgets, targets,
+   thresholds. New phases follow the specs below; if something there is unclear or does not
+   work as written, choose the most conservative reading, write the choice into the README
+   as a plan change made before the data, and continue.
+4. Pinned versions; do not upgrade transformers (4.47.1) or torch. New code paths go
+   through the dispatcher (new Target + Attack registered there), with unit tests. Run
+   `pytest -q -m "not slow"` before every commit that touches code; no regressions.
+5. Log every optimisation step to `.log` + `.jsonl`; an interrupted run must keep its data
+   and resume.
 6. Git: commit only on branch `claude/project-thread-mnmiam`. Never force-push or rewrite
-   history. If a push is rejected, `git pull --no-rebase` and push again. End every commit
-   message with the line `Co-Authored-By: Claude <noreply@anthropic.com>`.
-7. Long commands: start them in the background with `nohup ... > file 2>&1 &` and check the
-   output file every few minutes; do not hold a single tool call for hours.
+   history. If a push is rejected, `git pull --no-rebase` and push again. Use `git add -f`
+   for `runs/` (it is gitignored). End every commit message with the line
+   `Co-Authored-By: Claude <noreply@anthropic.com>`. Push at least every 30 min of running.
+7. Long commands: start them with `nohup ... > file 2>&1 &` and check the output every few
+   minutes; never hold one tool call for hours.
+8. Budget: stop the whole task (report and end) if total GPU wall time passes **20 h**, or if
+   any single phase is estimated (from a 5-step timing) at more than **6 h**.
+9. If something fails in a way you cannot fix without changing the design, STOP, push what
+   you have and write the report.
 
-## Steps
+## Phase 2, GPU part (arms A-D)
+
+Everything is implemented in `scripts/runpod/phase2_gpu.sh` and `scripts/topic_phase2.py`.
+The CPU part (baselines, arm E, ablation E_all) and `runs/topic_phase2/calibration.json` are
+committed: do not regenerate them.
 
 1. `git checkout claude/project-thread-mnmiam && git pull --no-rebase`.
-2. If `.venv` does not exist: `bash scripts/runpod/setup.sh` (about 15 min). It must end with
-   `cuda True` and `setup OK`. If no GPU is visible, STOP and report.
-3. Smoke test: `bash scripts/runpod/phase2_gpu.sh smoke 2>&1 | tee runs/topic_phase2/gpu_smoke.txt`.
-   It prints `arm A: X s/step -> Y h` and the same for arm D.
-4. Gate: estimated total = 3 x (arm A hours) + (arm D hours) + 0.5 h for generation.
-   If the estimate is above **8 h**, STOP here: commit `gpu_smoke.txt`, push, write the
-   report with the numbers, and end. Otherwise continue.
-5. Full run: `nohup bash scripts/runpod/phase2_gpu.sh run > runs/topic_phase2/gpu_run.out 2>&1 &`.
-   Every step is logged to `runs/topic_phase2/<arm>_s0_<page>.{jsonl,log}`; if it is
-   interrupted, restarting the same command resumes from the logs. Every ~30 min commit and
-   push the logs so far (`git add -f runs/topic_phase2/`), so a lost pod loses little.
-6. When the run has finished for all 4 arms x 4 pages, check the generations exist in
-   `runs/topic_phase2/gens.jsonl` for conds `A_s0`, `B_s0`, `C_s0`, `D_s0`.
-7. Measures: `nohup bash scripts/runpod/phase2_gpu.sh measure > runs/topic_phase2/gpu_measure.out 2>&1 &`
-   (score, local judge, table). Wait for it to finish.
-8. Commit and push: `git add -f runs/topic_phase2/ runs/topic_phase2_table.log`.
-9. Write `runs/topic_phase2/GPU_REPORT.md` (Polish, short): GPU name, smoke s/step, wall
-   time of run and measure, any crash and fix, and the table rows for A-D copied from
-   `runs/topic_phase2_table.log`. Do not interpret the research questions; the analysis is
-   done in the main thread. Commit and push it, then stop and tell Bartek it is done.
+2. If `.venv` is missing: `bash scripts/runpod/setup.sh` (must end with `cuda True` and
+   `setup OK`; if no GPU is visible, stop).
+3. `bash scripts/runpod/phase2_gpu.sh smoke 2>&1 | tee runs/topic_phase2/gpu_smoke.txt`.
+   Estimate = 3 x (arm A hours) + (arm D hours) + 0.5 h. Apply rule 8.
+4. `bash scripts/runpod/phase2_gpu.sh run` (background), then `measure`.
+5. Best arm, rule fixed before the data: among A-D, the arm with the highest mean SEPARATE
+   whose mean preservation is >= 0.8; ties or none passing -> highest SEPARATE overall, and
+   say so. Then `bash scripts/runpod/phase2_gpu.sh seeds <best>` and `measure` again.
+6. Answer the five Phase 2 questions in a new README subsection "Phase 2 results", each
+   separately, with numbers from `runs/topic_phase2_table.log`, sample suffixes of every arm,
+   and the lexical audit / manual review of arm A (is it a broken or foreign-language
+   explicit instruction? say it plainly). If no arm passes both detectors and the PPL filters
+   with more separate sentences than the naive sentence, write exactly that.
+7. Commit, push, write `runs/topic_phase2/GPU_REPORT.md` (Polish, short).
+
+## Phase 3: universality
+
+- One suffix optimised jointly over the 4 training pages (PHASE2_TRAIN), evaluated on those
+  4 and on the 4 held-out pages (the other 4 in PRODUCT_PAGES), never seen in optimisation.
+- Arm: the Phase 2 best arm, same budget per step, 300 steps; each step samples targets
+  across the 4 training pages (k=4 in total, rotating pages). Implement as a new Target
+  (e.g. `UniversalPageInjectionTarget`, a list of page/question/product/continuations) and
+  Attack registered in the dispatcher, reusing PageSuffixGCGAttack internals; add tests that
+  the joint loss equals the mean of per-page losses.
+- Control topic: repeat with gardening (new gardening continuations "{A_q} Tip: {gardening
+  tip}", 24 tips, same format; gardening already has TOPIC_REFERENCES). Measure SEPARATE for
+  cooking and for gardening on both suffixes (a cooking suffix should not inject gardening,
+  and vice versa).
+- Baselines on all 8 pages: clean, naive sentence, explicit instruction. Same measures,
+  generation and table format as Phase 2. Seeds 0 and 1.
+- Outputs under `runs/topic_phase3/`, README subsection "Phase 3 results", report
+  `runs/topic_phase3/REPORT.md` (Polish).
+
+## Phase 4a: transfer to another open model, locally
+
+- Take the Phase 3 universal suffixes (cooking and gardening, both seeds) as TEXT and paste
+  them unchanged into the same page prompts of two other open, non-gated models:
+  `Qwen/Qwen2.5-1.5B-Instruct` (same tokenizer) and `HuggingFaceTB/SmolLM2-1.7B-Instruct`
+  (different family). No re-optimisation.
+- Same baselines, measures and table for each model; note refusals if any (the 1.5B refused
+  2 of 8 questions in Phase 1b: report those pages separately, do not drop them silently).
+- Outputs under `runs/topic_phase4a/`, README subsection "Phase 4a results", report
+  `runs/topic_phase4a/REPORT.md` (Polish).
+
+## Phase 5: Pareto front
+
+- Loss L = l1 * KL_task + l2 * L_topic + l3 * L_fluency on Qwen2.5-0.5B, per training page:
+  - KL_task: mean over the clean greedy answer's tokens (teacher-forced) of
+    KL(p_clean || p_with_suffix);
+  - L_topic: the Phase 2 continuation-set loss;
+  - L_fluency: the arm C fluency term.
+- At least 5 weight points: l2 = 1, l3 = 0.2, l1 in {0, 0.1, 0.3, 1, 3}; 200 steps, seed 0,
+  4 training pages. New option in the dispatcher path with a unit test of the KL term.
+- Measure with the Phase 2 measures; plot SEPARATE (y) against preservation (x), one point
+  per weight setting, plus clean / naive / explicit / Phase 2 best arm as reference points.
+  Save `runs/topic_phase5/pareto.png` and the data as jsonl.
+- README subsection "Phase 5 results", report `runs/topic_phase5/REPORT.md` (Polish).
+
+## End
+
+Write `runs/AGENT_SUMMARY.md` (Polish): what ran, wall times, any plan changes and fixes,
+one paragraph per phase with the main numbers, and what is left (Phase 4b needs Bartek's
+consent and his own key; Phase 6 is shown to him before any publication). Commit, push, stop.
