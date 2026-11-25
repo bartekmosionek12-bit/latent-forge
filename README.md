@@ -825,3 +825,75 @@ is the bare `▁` (id 29871) in both cases, so `▁` was counted on both sides. 
 1939). The probability mass on `▁` was negligible (scores moved by < 1e-9); the Phase 2 judge was re-run with
 the fix, the old file is kept as `runs/topic_phase2/judge_v0_spacetoken_bug.jsonl`. Phase 1/1b judge numbers
 used the same code and carry the same (negligible) bias.
+
+### Phases 2 (GPU) to 5: implementation choices fixed before the data (agent run, 2026-11-25)
+
+Bartek asked for Phases 2 (GPU part), 3, 4a and 5 to run back to back on a RunPod RTX A5000
+(`scripts/runpod/AGENT_TASK.md`). Where the task spec left a choice open, the most conservative
+reading was taken and written here **before any Phase 3-5 data** (and before the Phase 2 A-D
+results were looked at). Orchestration: `scripts/runpod/agent_chain.sh`.
+
+**Pod and environment.**
+- The pod image sets `HF_HUB_ENABLE_HF_TRANSFER=1` without the `hf_transfer` package, so every
+  download failed; `setup.sh` now turns it off. No other change to the stack (torch 2.15.0+cu132,
+  transformers 4.47.1). `matplotlib==3.10.8` is a new pinned dependency, used only for the Phase 5
+  plot.
+- `pytest -m "not slow"`: 46/46 pass on CPU (`CUDA_VISIBLE_DEVICES=""`, the reference setup). On the
+  GPU, 3 older tests (closed-line code: steering, embedding region, region GCG) fail with a
+  CPU/GPU device mismatch; they fail the same way before any change of this run, so they are
+  pre-existing and unrelated, and CPU is the regression gate.
+- Phase 2 baselines and arm E ran on CPU (earlier), arms A-D on the GPU, both fp32. Greedy decoding
+  can differ slightly between devices; this is noted, not corrected.
+
+**Phase 2 best arm** (`scripts/runpod/best_arm.py`, rule from the task file, coded before the
+A-D data): among A-D at seed 0, the highest mean SEPARATE with mean preservation >= 0.8; on a tie
+or if none passes, the highest SEPARATE overall.
+
+**Phase 3 (universality).**
+- New `UniversalPageInjectionTarget` (a list of `ContinuationSetTarget`, one per training page)
+  and `UniversalPageSuffixGCGAttack` in the dispatcher. One sub-attack per page holds that page's
+  KV-cached prefix and targets. The joint loss is the **mean over pages of each page's full arm
+  loss** (continuation CE plus the arm's fluency/repetition/detector terms, each computed in its
+  own page context); the gradient is the mean of the per-page gradients; a candidate must
+  re-tokenise identically inside every page. Tested: joint loss, full metric and gradient equal
+  the mean of the per-page ones.
+- k = 4 targets per step in total = one target per training page, each page cycling through its
+  own 24 continuations (all 96 pairs are covered every 24 steps). The best suffix is chosen by the
+  mean over the 4 pages of the whole-set metric (as in Phase 2, per page).
+- Same budget per step as Phase 2 (20 tokens, 128 candidates, top-k 256, fluent start), 300 steps,
+  seeds 0 and 1, the Phase 2 best arm's terms.
+- Gardening continuations: `"{A_q} Tip: {gardening tip}"` with the same `A_q` as cooking and 24 new
+  neutral tips (`GARDENING_TIPS`).
+- Baselines on all 8 pages: clean, naive sentence, explicit instruction (the cooking ones, as
+  specified), plus **extra** rows with the gardening naive sentence and gardening explicit
+  instruction, so that the control topic has its own reference. Sampling seeds 0 and 1 for the
+  non-clean baselines; preservation always uses the seed-0 clean samples.
+- Every row is scored for cooking AND gardening (separate / fused / topical); the lexical audit is
+  done for both topics.
+- Refusal rule (fixed now, `scripts/topic_phase3.py: REFUSAL`): an answer is a refusal if it
+  starts with "I'm sorry", "Sorry", "I can't/cannot", "I'm unable", "I'm not able" or "As an AI".
+  Pages whose **clean** greedy answer is a refusal are reported in their own group, never dropped
+  and never mixed into the train / held-out means.
+
+**Phase 4a (transfer).** The four Phase 3 suffixes, as text, unchanged, in the same page prompts
+of `Qwen/Qwen2.5-1.5B-Instruct` and `HuggingFaceTB/SmolLM2-1.7B-Instruct` (fp32, each with its own
+default chat template and default system prompt, as for the 0.5B). Same baselines, measures and
+table, per model, with preservation measured against that model's own clean answers.
+
+**Phase 5 (Pareto).**
+- `PageSuffixGCGAttack` has a new `kl_weight` option (unit-tested against two full forwards):
+  KL_task = mean over the tokens of the clean greedy answer (the Phase 2 calibration
+  `clean_greedy`, re-tokenised) of KL(p_clean || p_with_suffix), where p_clean is computed once on
+  the page without any suffix.
+- "L_fluency = the arm C fluency term" is read as arm C's whole regulariser: suffix NLL at
+  l3 = 0.2 **and** arm C's repetition penalty at its arm C weight (1.0). With this reading the
+  point l1 = 0 is exactly arm C, which anchors the front to Phase 2.
+- Points l1 in {0, 0.1, 0.3, 1, 3}, l2 = 1, l3 = 0.2, 200 steps, seed 0, the 4 training pages, one
+  suffix per page; preservation uses the same Phase 2 clean references (copied).
+- **Budget fallback:** the KL term adds a forward over the ~300-token clean answer for every
+  candidate. If the 5-step fp32 timing puts the phase over 6 h (rule 8), the chain re-times with
+  TF32 tensor-core matmuls (`--tf32`; same objective, lower matmul precision) and runs all five
+  points that way if that fits; otherwise it stops. Whichever happened is reported with the results.
+
+**Git.** The pod has no GitHub credentials, and the task forbids looking for any, so commits stay
+local on `claude/project-thread-mnmiam` (in the persistent `/workspace` volume) until Bartek pushes.
