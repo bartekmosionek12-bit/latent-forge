@@ -10,9 +10,9 @@ from __future__ import annotations
 from typing import Any
 
 from attacks import (ActivationSteeringAttack, Attack, AttackResult, EmbeddingRegionAttack, GCGAttack,
-                     GCGRegionAttack, PageSuffixGCGAttack)
+                     GCGRegionAttack, PageSuffixGCGAttack, UniversalPageSuffixGCGAttack)
 from targets import (ActivationDirectionTarget, EmbeddingRegionTarget, HiddenStateRegionTarget,
-                     PageInjectionTarget, Target, TextTarget)
+                     PageInjectionTarget, Target, TextTarget, UniversalPageInjectionTarget)
 
 ATTACK_REGISTRY: dict[type[Target], type[Attack]] = {
     TextTarget: GCGAttack,
@@ -20,6 +20,7 @@ ATTACK_REGISTRY: dict[type[Target], type[Attack]] = {
     ActivationDirectionTarget: ActivationSteeringAttack,
     HiddenStateRegionTarget: GCGRegionAttack,
     PageInjectionTarget: PageSuffixGCGAttack,     # ContinuationSetTarget, TopicBandTarget
+    UniversalPageInjectionTarget: UniversalPageSuffixGCGAttack,   # Phase 3: one suffix, many pages
 }
 
 

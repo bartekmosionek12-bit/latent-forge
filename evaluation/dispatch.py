@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from targets import (ActivationDirectionTarget, EmbeddingRegionTarget, HiddenStateRegionTarget,
-                     PageInjectionTarget, TextTarget)
+                     PageInjectionTarget, TextTarget, UniversalPageInjectionTarget)
 
 from .embedding import evaluate_embedding_target
 from .text import evaluate_text_target
@@ -53,7 +53,7 @@ def evaluate_result(result, bundle) -> dict:
         from .hidden_region import evaluate_hidden_region
 
         return evaluate_hidden_region(result, bundle)
-    if isinstance(t, PageInjectionTarget):
+    if isinstance(t, (PageInjectionTarget, UniversalPageInjectionTarget)):
         # the generation-level measures (topic, correctness, detectors) are heavy and run in
         # scripts/topic_phase2.py; here only the optimisation metric is reported
         return {"best_full_total": result.final_loss, "best_step": result.extra.get("best_step"),

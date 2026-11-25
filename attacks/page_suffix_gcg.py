@@ -19,6 +19,10 @@ string re-tokenises to the same ids), with:
     rep_weight > 0             + w * repeated token 2/3-gram fraction (repetition attractor)
     detector_weight > 0     D: + w * P(injection) of the page text from classifier D1
                                (scoring only: D1 has its own tokenizer, no gradient)
+    kl_weight > 0           Phase 5: + w * KL_task, the mean over the tokens of the clean greedy
+                               answer (target.clean_answer, teacher-forced) of
+                               KL(p_clean || p_with_suffix); p_clean = the same answer given the
+                               page WITHOUT any suffix (ContinuationSetTarget only)
 * every step appended to ``log_path`` (.jsonl) and a human line to the matching .log;
   with resume=True a run restarts from the last logged step.
 
@@ -53,6 +57,8 @@ DEFAULTS = dict(
     rep_weight=0.0,
     detector_weight=0.0,
     detector_model="protectai/deberta-v3-base-prompt-injection-v2",
+    kl_weight=0.0,
+    kl_chunk=8,                   # candidates per KL forward (logits over the whole answer are large)
     targets_per_step=4,
     score_chunk=32,
     log_path=None,                # ".../run.jsonl"; a ".log" with the same stem is written too
@@ -81,6 +87,14 @@ def repeated_ngram_frac(ids: torch.Tensor) -> torch.Tensor:
             fr.append(1 - len(set(g)) / len(g) if g else 0.0)
         out.append(sum(fr) / len(fr))
     return torch.tensor(out)
+
+
+def kl_from_logp(logp_clean: torch.Tensor, logits: torch.Tensor) -> torch.Tensor:
+    """logp_clean [T, V] (log-probs without the suffix), logits [B, T, V] (with it) ->
+    [B] mean over the T positions of KL(p_clean || p_with_suffix)."""
+    logq = logits.float().log_softmax(-1)
+    p = logp_clean.exp()[None]
+    return (p * (logp_clean[None] - logq)).sum(-1).mean(-1)
 
 
 def word_token_mask(tokenizer, vocab_size: int, n_words: int) -> torch.Tensor:
@@ -138,6 +152,17 @@ class PageSuffixGCGAttack(Attack):
         self.P = self.before_ids.numel()
         if isinstance(t, ContinuationSetTarget):
             self.targets = [self._ids(x) for x in t.continuations]
+            if c["kl_weight"] > 0:
+                if not t.clean_answer:
+                    raise ValueError("kl_weight > 0 needs target.clean_answer (the clean greedy answer)")
+                self.ans_ids = self._ids(t.clean_answer)
+                with torch.no_grad():
+                    clean = torch.cat([self.before_ids, self.after_ids, self.ans_ids])[None]
+                    T, A = self.ans_ids.numel(), self.after_ids.numel()
+                    lg = self.model(clean).logits[0, self.P + A - 1:self.P + A + T - 1]
+                    self.logp_clean = lg.float().log_softmax(-1)          # [T, V]
+        elif c["kl_weight"] > 0:
+            raise ValueError("kl_weight is only defined for a ContinuationSetTarget")
         else:
             from attacks.activation_steering import contrastive_direction
             from targets import ActivationDirectionTarget
@@ -192,6 +217,18 @@ class PageSuffixGCGAttack(Attack):
                 flu = self.model.lm_head(h[:, : n - 1])
         return torch.stack(objs).mean(0), flu
 
+    def _kl_term(self, B, ids=None, embeds=None) -> torch.Tensor:
+        """[B] KL_task for suffix ids [B, n] (or embeds [B, n, d])."""
+        n, A, T = self.config["n_tokens"], self.after_ids.numel(), self.ans_ids.numel()
+        if embeds is None:
+            seq = torch.cat([ids, self.after_ids.expand(B, -1), self.ans_ids.expand(B, -1)], 1)
+            h = self._run(B, seq.shape[1], input_ids=seq).last_hidden_state
+        else:
+            seq = torch.cat([embeds, self.W[self.after_ids].expand(B, -1, -1),
+                             self.W[self.ans_ids].expand(B, -1, -1)], 1)
+            h = self._run(B, seq.shape[1], inputs_embeds=seq).last_hidden_state
+        return kl_from_logp(self.logp_clean, self.model.lm_head(h[:, n + A - 1:n + A + T - 1]))
+
     def _band_obj(self, B, ids=None, embeds=None):
         t = self.target
         cap = {}
@@ -219,7 +256,7 @@ class PageSuffixGCGAttack(Attack):
     def score(self, cands: torch.Tensor, tgt_idx) -> dict:
         """Exact batched loss components for [B, n] candidate suffixes."""
         c = self.config
-        out = {k: [] for k in ("obj", "flu", "cos")}
+        out = {k: [] for k in ("obj", "flu", "cos", "kl")}
         with torch.no_grad():
             for part in cands.split(c["score_chunk"]):
                 B = part.shape[0]
@@ -228,6 +265,8 @@ class PageSuffixGCGAttack(Attack):
                     out["obj"].append(obj)
                     if flu_logits is not None:
                         out["flu"].append(self._fluency_from_logits(flu_logits, part))
+                    if c["kl_weight"] > 0:
+                        out["kl"] += [self._kl_term(q.shape[0], ids=q) for q in part.split(c["kl_chunk"])]
                 else:
                     obj, cos = self._band_obj(B, ids=part)
                     out["obj"].append(obj)
@@ -239,6 +278,8 @@ class PageSuffixGCGAttack(Attack):
         total = res["obj"].clone()
         if c["fluency_weight"] > 0:
             total += c["fluency_weight"] * res["flu"]
+        if c["kl_weight"] > 0:
+            total += c["kl_weight"] * res["kl"]
         if c["rep_weight"] > 0:
             res["rep"] = repeated_ngram_frac(cands)
             total += c["rep_weight"] * res["rep"]
@@ -259,6 +300,8 @@ class PageSuffixGCGAttack(Attack):
         if isinstance(self.target, ContinuationSetTarget):
             obj, flu_logits = self._continuation_terms(None, 1, tgt_idx, c["fluency_weight"] > 0, embeds=emb)
             loss = obj.sum()
+            if c["kl_weight"] > 0:
+                loss = loss + c["kl_weight"] * self._kl_term(1, embeds=emb).sum()
         else:
             loss, _ = self._band_obj(1, embeds=emb)
             loss = loss.sum()
@@ -273,7 +316,7 @@ class PageSuffixGCGAttack(Attack):
 
     def full_metric(self, suffix: torch.Tensor) -> dict:
         """Optimisation metric on the WHOLE target set (continuations) or the band."""
-        idx = list(range(len(self.targets))) if hasattr(self, "targets") else [0]
+        idx = list(range(self._n_targets()))
         r = self.score(suffix[None], idx)
         return {k: float(v[0]) for k, v in r.items()}
 
@@ -295,6 +338,13 @@ class PageSuffixGCGAttack(Attack):
         return ids
 
     # ---------------------------------------------------------------- loop
+    def _n_targets(self) -> int:
+        return len(getattr(self, "targets", [0]))
+
+    def _step_targets(self, step: int, k: int, n_t: int):
+        """Targets scored at ``step``: k consecutive ones, rotating through the whole set."""
+        return [((step - 1) * k + i) % n_t for i in range(k)]
+
     def _log(self, rec: dict, line: str) -> None:
         p = self.config["log_path"]
         if not p:
@@ -308,7 +358,7 @@ class PageSuffixGCGAttack(Attack):
     def run(self, bundle) -> AttackResult:
         c, t0 = self.config, time.time()
         self.setup(bundle)
-        n_t = len(getattr(self, "targets", [0]))
+        n_t = self._n_targets()
         k = min(c["targets_per_step"], n_t)
         suffix, start = self.init_suffix(), 0
         best = None
@@ -331,7 +381,7 @@ class PageSuffixGCGAttack(Attack):
         for step in range(start, c["num_steps"] + 1):
             ts = time.time()
             g = torch.Generator(device="cpu").manual_seed(c["seed"] * 100_003 + step)
-            tgt_idx = [((step - 1) * k + i) % n_t for i in range(k)]
+            tgt_idx = self._step_targets(step, k, n_t)
             grad = self.token_grad(suffix, tgt_idx)
             grad[:, ~self.allowed] = float("inf")
             top = (-grad).topk(c["topk"], dim=1).indices.cpu()

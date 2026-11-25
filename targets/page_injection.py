@@ -33,6 +33,7 @@ class PageInjectionTarget(Target):
 @dataclass(repr=False)
 class ContinuationSetTarget(PageInjectionTarget):
     continuations: list[str] = field(default_factory=list)
+    clean_answer: str = ""            # clean greedy answer; only for the Phase 5 KL_task term
     kind = "continuation_set"
 
     def __post_init__(self) -> None:
@@ -63,3 +64,23 @@ class TopicBandTarget(PageInjectionTarget):
     def describe(self) -> str:
         return (f"cos band {self.band_center:.3f} at layer {self.layer} ({self.positions} positions), "
                 f"{super().describe()}")
+
+
+@dataclass(repr=False)
+class UniversalPageInjectionTarget(Target):
+    """Phase 3: ONE suffix for several product pages at once. Each entry is a full
+    ContinuationSetTarget (page, question, product, its own target continuations); the
+    suffix is pasted at the end of every page. Held-out pages are not part of the target."""
+    pages: list[ContinuationSetTarget] = field(default_factory=list)
+    kind = "universal_page_injection"
+
+    def __post_init__(self) -> None:
+        if len(self.pages) < 2:
+            raise ValueError("a universal target needs at least two pages")
+        if not all(isinstance(p, ContinuationSetTarget) for p in self.pages):
+            raise ValueError("every page must be a ContinuationSetTarget")
+        if len({p.product for p in self.pages}) != len(self.pages):
+            raise ValueError("pages must be about different products")
+
+    def describe(self) -> str:
+        return f"one suffix for {len(self.pages)} pages ({', '.join(p.product for p in self.pages)})"
