@@ -1,0 +1,19 @@
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]Fetching 10 files:  80%|████████  | 8/10 [00:00<00:00, 15.02it/s]Fetching 10 files: 100%|██████████| 10/10 [00:02<00:00,  3.73it/s]
+/workspace/.cache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-Instruct/snapshots/7ae557604adf67be50417f59c2c2f167def9a775
+Fetching 19 files:   0%|          | 0/19 [00:00<?, ?it/s]Fetching 19 files:  42%|████▏     | 8/19 [00:00<00:00, 20.38it/s]Fetching 19 files:  84%|████████▍ | 16/19 [00:01<00:00, 15.54it/s]Fetching 19 files: 100%|██████████| 19/19 [00:01<00:00, 10.73it/s]
+/workspace/.cache/huggingface/hub/models--protectai--deberta-v3-base-prompt-injection-v2/snapshots/90c9989b1a342275dd0d1a95aad283c04e075671
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]Fetching 10 files:  80%|████████  | 8/10 [00:00<00:00,  9.60it/s]Fetching 10 files: 100%|██████████| 10/10 [00:01<00:00,  5.06it/s]
+/workspace/.cache/huggingface/hub/models--proventra--mdeberta-v3-base-prompt-injection/snapshots/b8a89d3096cf11a71d57b283c854f5ae2ed3df83
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]Fetching 10 files:  80%|████████  | 8/10 [00:00<00:00, 21.25it/s]Fetching 10 files: 100%|██████████| 10/10 [00:01<00:00,  6.11it/s]
+/workspace/.cache/huggingface/hub/models--HuggingFaceTB--SmolLM2-360M/snapshots/f8027fd0eaeea54caa13c31d31b9fdc459c38b49
+Fetching 28 files:   0%|          | 0/28 [00:00<?, ?it/s]Fetching 28 files:  29%|██▊       | 8/28 [00:01<00:03,  5.18it/s]Fetching 28 files:  57%|█████▋    | 16/28 [00:02<00:01,  7.06it/s]Fetching 28 files:  86%|████████▌ | 24/28 [00:03<00:00,  7.63it/s]Fetching 28 files: 100%|██████████| 28/28 [00:03<00:00,  7.86it/s]
+/workspace/.cache/huggingface/hub/models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/snapshots/e8f8c211226b894fcb81acc59f3b34ba3efd5f42
+Fetching 20 files:   0%|          | 0/20 [00:00<?, ?it/s]Fetching 20 files:  40%|████      | 8/20 [00:00<00:00, 24.45it/s]Fetching 20 files:  80%|████████  | 16/20 [00:00<00:00, 25.97it/s]Fetching 20 files: 100%|██████████| 20/20 [00:04<00:00,  4.18it/s]
+/workspace/.cache/huggingface/hub/models--microsoft--Phi-3.5-mini-instruct/snapshots/2fe192450127e6a83f7441aef6e3ca586c338b77
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]Fetching 10 files:  80%|████████  | 8/10 [00:00<00:00, 22.36it/s]Fetching 10 files: 100%|██████████| 10/10 [00:03<00:00,  3.18it/s]
+/workspace/.cache/huggingface/hub/models--Qwen--Qwen2.5-1.5B-Instruct/snapshots/989aa7980e4cf806f80c7fef2b1adb7bc71aa306
+Fetching 28 files:   0%|          | 0/28 [00:00<?, ?it/s]Fetching 28 files:  29%|██▊       | 8/28 [00:00<00:00, 20.23it/s]Fetching 28 files:  57%|█████▋    | 16/28 [00:07<00:05,  2.15it/s]Fetching 28 files:  86%|████████▌ | 24/28 [00:08<00:01,  2.93it/s]Fetching 28 files: 100%|██████████| 28/28 [00:09<00:00,  2.92it/s]
+/workspace/.cache/huggingface/hub/models--HuggingFaceTB--SmolLM2-1.7B-Instruct/snapshots/31b70e2e869a7173562077fd711b654946d38674
+Fetching 13 files:   0%|          | 0/13 [00:00<?, ?it/s]Fetching 13 files:  62%|██████▏   | 8/13 [00:00<00:00, 14.17it/s]Fetching 13 files: 100%|██████████| 13/13 [00:02<00:00,  5.66it/s]
+/workspace/.cache/huggingface/hub/models--deepset--deberta-v3-base-injection/snapshots/80dda00d0b0d9a03917a7685e2ddbcd28e04dbb1
+setup OK

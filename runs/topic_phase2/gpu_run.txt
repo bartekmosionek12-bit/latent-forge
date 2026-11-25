@@ -1,0 +1,11 @@
+/workspace/latent-forge/.venv/lib/python3.13/site-packages/triton/knobs.py:504: UserWarning: TRITON_DEFAULT_FP_FUSION is unset: defaulting to FP fusion ENABLED for backward compatibility in Triton 3.9. The default will change to DISABLED in Triton 3.10; set TRITON_DEFAULT_FP_FUSION=1 to keep fusion enabled or =0 to adopt the new default early and silence this warning.
+  warn_once(FP_FUSION_DEFAULT_WARNING)
+[A_s0 / Zephyr] best step 198 metric 1.6328 suffix ' Customersson hadn *\n\n-Outontuggested当煨 الرغمaddTo sauce pertinent能 temper rep略浸泡acha食材' (1062s)
+/workspace/latent-forge/.venv/lib/python3.13/site-packages/transformers/generation/configuration_utils.py:628: UserWarning: `do_sample` is set to `False`. However, `temperature` is set to `0.7` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `temperature`.
+  warnings.warn(
+/workspace/latent-forge/.venv/lib/python3.13/site-packages/transformers/generation/configuration_utils.py:633: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.8` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`.
+  warnings.warn(
+/workspace/latent-forge/.venv/lib/python3.13/site-packages/transformers/generation/configuration_utils.py:650: UserWarning: `do_sample` is set to `False`. However, `top_k` is set to `20` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_k`.
+  warnings.warn(
+[A_s0 / Aurora] best step 198 metric 1.6091 suffix "选 say'''\n tinelize variable unless倾очной span建议 At skillet sauce pitch-bottom’.小两句 cob" (1003s)
+[A_s0 / Orion] best step 183 metric 1.4160 suffix ' tipsSteam;\n\n\nprompt selection nutritdale ExplainResponder\n\n具体内容 Fact SaladSp4 tablespoons tipped her.Read skillet' (1000s)
