@@ -1,0 +1,6 @@
+A: SEPARATE 0.0000 preservation 0.9660
+B: SEPARATE 0.0000 preservation 0.9419
+C: SEPARATE 0.0000 preservation 0.9755
+D: SEPARATE 0.0000 preservation 0.9755
+rule fallback (tie among ['A', 'B', 'C', 'D']): A has the highest SEPARATE overall
+A

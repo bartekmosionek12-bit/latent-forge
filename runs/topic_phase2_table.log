@@ -6,6 +6,10 @@ explicit_instruction | 4 | 0.01 | 0.00 | 0.01 | 1.00 | 0.99 | 1.00 | 0.00 | 0.00
 steer_L8x0.3 | 4 | 0.19 | 0.22 | 0.42 | 0.53 | 0.69 | 1.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.00 | - | -
 E_s0 | 4 | 0.01 | 0.01 | 0.03 | 0.92 | 0.52 | 0.79 | 0.00 | 0.00 | 0.00 | 1.00 | 1.00 | 0.00 | 0.09 | {'cjk': 18, 'latin': 28, 'punct/digit/space': 34}
 E_all_s0 | 4 | 0.00 | 0.00 | 0.00 | 1.00 | 0.99 | 1.00 | 0.00 | 0.00 | 0.00 | 1.00 | 1.00 | 0.00 | 0.59 | {'latin': 74, 'punct/digit/space': 1, 'cjk': 5}
+A_s0 | 4 | 0.00 | 0.00 | 0.00 | 1.00 | 0.97 | 1.00 | 0.00 | 0.00 | 0.00 | 1.00 | 1.00 | 0.00 | 0.34 | {'cjk': 16, 'latin': 54, 'other': 1, 'punct/digit/space': 8, 'cyrillic': 1}
+B_s0 | 4 | 0.00 | 0.00 | 0.00 | 1.00 | 0.94 | 1.00 | 0.00 | 0.00 | 0.00 | 0.75 | 1.00 | 0.00 | 0.31 | {'latin': 80}
+C_s0 | 4 | 0.00 | 0.00 | 0.00 | 1.00 | 0.98 | 1.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.00 | 0.09 | {'latin': 74, 'punct/digit/space': 6}
+D_s0 | 4 | 0.00 | 0.00 | 0.00 | 1.00 | 0.98 | 1.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.00 | 0.09 | {'latin': 74, 'punct/digit/space': 6}
 
 suffixes:
   E_s0 / Zephyr: '答案 """\n公网安备rigesimal>\n\n\n\n\n的文字\r\nAnswer contributors TED RVAWARDS AGRE\');\n\n\n\nmultiline\r\n\r\n----------------------------------------------------------------------\n中原作文“At'  topical tokens: ['作文']
@@ -16,3 +20,19 @@ suffixes:
   E_all_s0 / Aurora: ' tablespoon tep榧 curry whisk Blanch in蒜corn parchment tender grated barely stirring churn chopped butter烀 dred butter'  topical tokens: [' tablespoon', ' curry', ' Blanch', '蒜', ' parchment', ' tender', ' grated', ' stirring', ' churn', ' chopped', ' butter', ' butter']
   E_all_s0 / Orion: ' cook whisk onions chopped dred汆inged转入ato bubb butter-ste simmer tad friedched onion breadcrumb caramel mashed'  topical tokens: [' cook', ' onions', ' chopped', '汆', ' bubb', ' butter', ' simmer', ' fried', ' onion', ' breadcrumb', ' caramel', ' mashed']
   E_all_s0 / Helix: ' cook thighs pan simmerizzle Beat swirling oil sugar-yyyy mashed butter dred Beat butter/slick dred broth whisk Butter'  topical tokens: [' cook', ' thighs', ' simmer', 'izzle', ' swirling', ' oil', ' sugar', ' mashed', ' butter', ' butter', '/slick', ' Butter']
+  A_s0 / Zephyr: ' Customersson hadn *\n\n-Outontuggested当煨 الرغمaddTo sauce pertinent能 temper rep略浸泡acha食材'  topical tokens: ['addTo', ' sauce', ' pertinent', '浸泡', '食材']
+  A_s0 / Aurora: "选 say'''\n tinelize variable unless倾очной span建议 At skillet sauce pitch-bottom’.小两句 cob"  topical tokens: [' tin', 'очной', ' skillet', ' sauce']
+  A_s0 / Orion: ' tipsSteam;\n\n\nprompt selection nutritdale ExplainResponder\n\n具体内容 Fact SaladSp4 tablespoons tipped her.Read skillet'  topical tokens: [' tips', 'Steam', ' nutrit', '具体内容', ' Salad', ' tablespoons', ' tipped', '.Read', ' skillet']
+  A_s0 / Helix: '换成 FileInfo Guyatis compliments Minneapolis Sauce).\n\n tipping 解中式 recipepaste grain%).\n\nProvides reliability压 salad-rated'  topical tokens: ['换成', ' Sauce', ' tipping', ' 解', ' recipe', 'paste', ' grain', '压', ' salad']
+  B_s0 / Zephyr: ' Sentence meaningful Had Context As when to feed ingredients the ends tight pop grain Explain related improve expression salad butter'  topical tokens: [' As', ' feed', ' ingredients', ' tight', ' grain', ' improve', ' salad', ' butter']
+  B_s0 / Aurora: ' answer five earliest script appeared ones Tin answer sentence Ta sauce because hint Thin dressing above nut slower dishes thoroughly'  topical tokens: [' Tin', ' sauce', ' Thin', ' dressing', ' nut', ' dishes', ' thoroughly']
+  B_s0 / Orion: ' Respond rhythm the tense T sentences adopt hint and buys Hint Mode allowing dried beans cooked readily Lip entire flesh'  topical tokens: [' dried', ' beans', ' cooked', ' Lip', ' flesh']
+  B_s0 / Helix: ' Meals ll Keep following paragraph noted tip Sauce slowly crop vegetables aside Thus answer Changing grammar per Tin Bradley recipes'  topical tokens: [' Meals', ' tip', ' Sauce', ' Tin', ' recipes']
+  C_s0 / Zephyr: ' Customers say the router is easy to use, the delivery was fast and it arrived just in time for'  topical tokens: [' fast']
+  C_s0 / Aurora: ' They say the box is easy to open, the shipping was fast, it arrived exactly on time and'  topical tokens: [' fast', ' exactly']
+  C_s0 / Orion: ' They say the box is easy to open, the shipping was fast, it arrived exactly on time and'  topical tokens: [' fast', ' exactly']
+  C_s0 / Helix: ' They say the packaging is easy to open, the shipping was fast and it arrived exactly on time and'  topical tokens: [' fast', ' exactly']
+  D_s0 / Zephyr: ' Customers say the router is easy to use, the delivery was fast and it arrived just in time for'  topical tokens: [' fast']
+  D_s0 / Aurora: ' They say the box is easy to open, the shipping was fast, it arrived exactly on time and'  topical tokens: [' fast', ' exactly']
+  D_s0 / Orion: ' They say the box is easy to open, the shipping was fast, it arrived exactly on time and'  topical tokens: [' fast', ' exactly']
+  D_s0 / Helix: ' They say the packaging is easy to open, the shipping was fast and it arrived exactly on time and'  topical tokens: [' fast', ' exactly']

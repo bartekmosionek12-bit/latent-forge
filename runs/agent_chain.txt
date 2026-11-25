@@ -1,0 +1,10 @@
+phase2 run+measure exited 2026-11-25T20:48:17Z
+A: SEPARATE 0.0000 preservation 0.9660
+B: SEPARATE 0.0000 preservation 0.9419
+C: SEPARATE 0.0000 preservation 0.9755
+D: SEPARATE 0.0000 preservation 0.9755
+rule fallback (tie among ['A', 'B', 'C', 'D']): A has the highest SEPARATE overall
+A
+=== 2026-11-25T20:48:17Z Phase 2 seeds for A
+/workspace/latent-forge/.venv/lib/python3.13/site-packages/triton/knobs.py:504: UserWarning: TRITON_DEFAULT_FP_FUSION is unset: defaulting to FP fusion ENABLED for backward compatibility in Triton 3.9. The default will change to DISABLED in Triton 3.10; set TRITON_DEFAULT_FP_FUSION=1 to keep fusion enabled or =0 to adopt the new default early and silence this warning.
+  warn_once(FP_FUSION_DEFAULT_WARNING)
