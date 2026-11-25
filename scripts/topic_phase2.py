@@ -30,6 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import torch  # noqa: E402
 
 OUT = "runs/topic_phase2"
+TABLE = "runs/topic_phase2_table.log"
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 GEN_TOKENS, N_SAMPLES = 320, 5
 STEER_LAYER, STEER_FRAC = 8, 0.3
@@ -347,7 +348,7 @@ def cmd_table(a):
                          f"{r['audit']['topical_tokens']}")
     txt = "\n".join(lines)
     print(txt)
-    open("runs/topic_phase2_table.log", "w").write(txt + "\n")
+    open(TABLE, "w").write(txt + "\n")
 
 
 if __name__ == "__main__":
