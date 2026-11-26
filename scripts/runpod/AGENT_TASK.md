@@ -9,6 +9,13 @@ Bartek asked (2026-11-25) for Phases 2, 3, 4a and 5 to run back to back without 
 him between them. That lifts his "stop after every phase" rule for these four phases only.
 Phase 4b (closed API model) and Phase 6 (tool / publication) are NOT part of this task.
 
+## Plan change 2026-11-26 (Bartek): stop after Phase 2
+
+Phase 2 gave SEPARATE = 0 for every arm. Bartek decided: finish the Phase 2 seeds of the chosen
+arm and `measure`, commit and push, update `runs/topic_phase2/GPU_REPORT.md`, then STOP. Do NOT start
+Phases 3, 4a or 5 (`agent_chain.sh` must not get past "Phase 2 done"). The sections on those phases
+below are kept for the record only.
+
 ## Hard rules (from Bartek, not negotiable)
 
 1. No API keys, tokens or secrets in the repo, in logs, or in your output. Never print, copy
